@@ -1,0 +1,19 @@
+name: 'Create dependency graph'
+description: 'Graphs dependency order of Terraform stacks using dependencies.json and returns sorted order in JSON format'
+outputs:
+  json_directory_list:
+    description: "List of the stacks to deploy in dependency order in JSON format"
+    value: ${{ steps.stack_order.outputs.order }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Find order of stacks
+      shell: bash
+      id: stack_order
+      run: echo "order=$(python ${{ github.action_path }}/main.py)" >> $GITHUB_OUTPUT
