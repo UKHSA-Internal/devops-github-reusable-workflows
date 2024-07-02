@@ -6,10 +6,10 @@ on:
 
 jobs:
   test_terraform_dependency_sort:
-    name: "Test Terraform Dependency Sort"
+    name: Test Terraform Dependency Sort
     runs-on: ubuntu-latest
     steps:
-      - name: "Checkout"
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -18,9 +18,9 @@ jobs:
           python-version: "3.12"
 
       - name: Install requirements.txt
-        working-directory: ./github/actions/terraform-dependency-sort
+        working-directory: /.github/actions/terraform-dependency-sort
         run: pip install -r requirements.txt
 
       - name: Run unit tests against Terraform Dependency Sort
-        working-directory: ./github/actions/terraform-dependency-sort
+        working-directory: ./.github/actions/terraform-dependency-sort
         run: python -m unittests
