@@ -10,7 +10,6 @@ from main import (
     create_nodes_from_dep_file,
 )
 
-
 class TestDependencyResolver(unittest.TestCase):
 
     def setUp(self):
@@ -19,11 +18,16 @@ class TestDependencyResolver(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
-    def write_json(self, dir_name, content):
+    def write_json(self, dir_name, content, valid_json=True):
+        """Writes JSON to dependencies.json in dir_name. Writes arbitrary content if valid_json is set to False"""
         path = os.path.join(self.test_dir, dir_name, "dependencies.json")
         os.makedirs(os.path.dirname(path), exist_ok=True)
+        if valid_json:
+            json_content = {"dependencies": {"paths": content}}
+        else:
+            json_content = content  
         with open(path, "w") as f:
-            json.dump({"dependencies": {"paths": content}}, f)
+            json.dump(json_content, f)
 
     def test_circular_dependency(self):
         """Test that circular dependencies will raise exception"""
@@ -139,6 +143,31 @@ class TestDependencyResolver(unittest.TestCase):
                 )
 
         self.assertIn("Unknown dependency detected", str(context.exception))
+
+    def test_non_schema_dependencies_file(self):
+        """Ensure exception is raised when dependencies.json doesn't meet JSON schema"""
+
+        self.write_json("stack1", {"foo": {"bar": "hello"}}, valid_json=False)
+    
+        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
+        for file_path in json_files:
+            with self.assertRaises(Exception) as context:
+                extract_dependencies_from_file(file_path)
+            
+            self.assertIn("'dependencies' is a required property", str(context.exception))
+    
+    def test_malformed_dependencies_file(self):
+        """Ensure exception is raised when dependencies.json is malformed (i.e. invalid JSON)"""
+
+        # write_json.json_content
+        self.write_json("stack1", "hellohellohellohello", valid_json=False)
+
+        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
+        for file_path in json_files:
+            with self.assertRaises(Exception) as context:
+                extract_dependencies_from_file(file_path)
+            
+            self.assertIn("Failed validating", str(context.exception))
 
 
 if __name__ == "__main__":

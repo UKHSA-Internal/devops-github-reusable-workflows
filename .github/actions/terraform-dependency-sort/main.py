@@ -3,6 +3,8 @@ import os
 import json
 import logging
 import argparse
+from jsonschema import validate
+
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "CRITICAL").upper()
 logger = logging.getLogger(__name__)
@@ -12,6 +14,27 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--draw", action="store_true")
 args = parser.parse_args()
 DRAW_GRAPH = args.draw
+JSON_SCHEMA = {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Dependencies Schema",
+    "type": "object",
+    "properties": {
+        "dependencies": {
+            "type": "object",
+            "properties": {
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                    }
+                }
+            },
+            "required": ["paths"],
+        }
+    },
+    "required": ["dependencies"],
+}
+
 
 try:
     from gvgen import GvGen
@@ -123,6 +146,7 @@ def extract_dependencies_from_file(file_path):
     """
     with open(file_path, "r") as file:
         data = json.load(file)
+        validate(data, JSON_SCHEMA)
         return data["dependencies"]["paths"]
 
 

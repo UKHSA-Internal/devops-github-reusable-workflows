@@ -42,6 +42,7 @@ jobs:
 ### Prerequisites
 
 - Python 3.x
+- pip
 - `gvgen` (optional, for graph visualisation)
 
 ### Clone the Repository and run Unit Tests
@@ -49,6 +50,7 @@ jobs:
 ```bash
 git clone https://github.com/UKHSA-Internal/devops-github-reusable-workflows.git
 cd devops-github-reusable-workflows/.github/actions/terraform-dependency-sort
+pip install -r requirements.txt
 python -m unittest
 ```
 
