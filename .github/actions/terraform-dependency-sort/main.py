@@ -9,17 +9,17 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=LOG_LEVEL)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-d', '--draw',
-                    action='store_true') 
+parser.add_argument("-d", "--draw", action="store_true")
 args = parser.parse_args()
 DRAW_GRAPH = args.draw
 
-try: 
+try:
     from gvgen import GvGen
 except ImportError:
     logger.warning("Unable to import Gvgen. DOT files cannot be created")
 else:
     g = GvGen()
+
 
 class Node:
     """
@@ -28,23 +28,30 @@ class Node:
     Attributes:
         name (str): The name of the node.
         edges (list): List of edges (dependencies) from this node to other nodes.
+        valid_dir (bool): Whether the directory for this node exists.
     """
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, base_dir: str):
         """
         Initialize a Node object.
 
         Args:
             name (str): The name of the node.
+            base_dir (str): The base directory for the nodes.
         """
         self.name = name
         self.edges = []
+        self.valid_dir = self._verify_dir_exists(base_dir)
         logger.debug(f"{name} was created as a Node object!")
+
         if DRAW_GRAPH:
             try:
                 self.graph_item = g.newItem(name)
             except NameError:
                 pass
+
+    def _verify_dir_exists(self, base_dir):
+        return os.path.isdir(os.path.join(base_dir, self.name))
 
     def add_edge(self, edge):
         """
@@ -68,7 +75,7 @@ class Node:
         Args:
             resolved (list): List to store resolved nodes in topological order.
             seen (list, optional): List to track nodes that have been visited to detect cycles. Defaults to [].
-        
+
         Raises:
             Exception: If a circular reference is detected.
         """
@@ -104,7 +111,7 @@ def find_dependencies_json_files(start_dir, max_depth=2):
     return results
 
 
-def extract_dependencies(file_path):
+def extract_dependencies_from_file(file_path):
     """
     Extract dependencies from a 'dependencies.json' file.
 
@@ -116,7 +123,7 @@ def extract_dependencies(file_path):
     """
     with open(file_path, "r") as file:
         data = json.load(file)
-        return data.get("dependencies", [])
+        return data["dependencies"]["paths"]
 
 
 def topological_sort(nodes):
@@ -146,34 +153,50 @@ def topological_sort(nodes):
     return sorted_nodes
 
 
+def create_nodes_from_dep_file(stack_dir, dependencies, stacks_dict, base_dir):
+    """
+    Create a Node object of the stack_dir and any dependencies in its dependencies.json file
+
+    Args:
+        stack_dir (str): Relative directory of the Terraform stack
+        dependencies (list): The dependencies extracted from the dependencies.json file
+        stacks_dict (dict): The list of stacks that have been processed thus far.
+        base_dir (str): The base directory for the nodes.
+
+    Raises:
+        Exception: If a non-existent stack is referenced in the dependencies.json file.
+    """
+    if stack_dir not in stacks_dict:
+        stacks_dict[stack_dir] = Node(stack_dir, base_dir)
+
+    node = stacks_dict[stack_dir]
+
+    for dep in dependencies:
+        if dep not in stacks_dict:
+            stacks_dict[dep] = Node(dep, base_dir)
+        if not stacks_dict[dep].valid_dir:
+            raise Exception(
+                f"Unknown dependency detected: non-existent {dep} found in {stack_dir}/dependencies.json"
+            )
+        node.add_edge(stacks_dict[dep])
+
+
 if __name__ == "__main__":
     start_dir = os.getcwd()
     json_files = find_dependencies_json_files(start_dir, max_depth=2)
     stacks_dict = {}
 
     for file_path in json_files:
-        relative_dir = f"./{os.path.relpath(os.path.dirname(file_path), start_dir)}"
-        dependencies = extract_dependencies(file_path)
-
-        if relative_dir not in stacks_dict:
-            stacks_dict[relative_dir] = Node(relative_dir)
-
-        node = stacks_dict[relative_dir]
-
-        for dep in dependencies:
-            if dep not in stacks_dict:
-                stacks_dict[dep] = Node(dep)
-            node.add_edge(stacks_dict[dep])
+        stack_dir = f"./{os.path.relpath(os.path.dirname(file_path), start_dir)}"
+        dependencies = extract_dependencies_from_file(file_path)
+        create_nodes_from_dep_file(stack_dir, dependencies, stacks_dict, start_dir)
 
     resolved = []
     for dep in stacks_dict.values():
         dep.dep_resolve(resolved)
 
     sorted_nodes = topological_sort(stacks_dict.values())
-    for node in sorted_nodes:
-        logger.info(f"Node name: {node.name}")
-        logger.info(f"Direct dependencies: {[edge.name for edge in node.edges]}")
-    
+
     if DRAW_GRAPH:
         try:
             g.dot()
