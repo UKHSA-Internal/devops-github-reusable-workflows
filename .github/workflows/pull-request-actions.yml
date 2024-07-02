@@ -1,0 +1,11 @@
+name: "[Pull Request] Composite Actions Workflow"
+
+on:
+  pull_request:
+    branches: [main]
+    paths: [".github/actions/**"]
+
+jobs:
+  run_tests:
+    name: "[Tests]"
+    uses: "./.github/workflows/_tests.yml"
