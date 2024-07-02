@@ -1,6 +1,6 @@
 ## Overview
 
-The terraform-dependency-sort action processes directories containing `dependencies.json` files to build a dependency graph of Terraform stacks. It then performs topological sorting to determine the correct order for deploying the stacks and returns the list of sorted stacks in JSON format, ready to be used in a Github Actions matrix. The script can also visualize the dependency graph using `gvgen`.
+The terraform-dependency-sort action processes directories containing `dependencies.json` files to build a directed graph of Terraform stacks using a [depth-first search](https://en.wikipedia.org/wiki/Depth-first_search) algorithm. It then performs topological sorting to determine the correct order for deploying the stacks and returns the list of sorted stacks in JSON format, ready to be used in a Github Actions matrix. The script can also visualise the dependency graph using `gvgen`.
 
 ## Features
 

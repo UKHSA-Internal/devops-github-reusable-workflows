@@ -5,7 +5,6 @@ import logging
 import argparse
 from jsonschema import validate
 
-
 LOG_LEVEL = os.getenv("LOG_LEVEL", "CRITICAL").upper()
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=LOG_LEVEL)
@@ -14,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--draw", action="store_true")
 args = parser.parse_args()
 DRAW_GRAPH = args.draw
+
 JSON_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Dependencies Schema",
@@ -26,7 +26,7 @@ JSON_SCHEMA = {
                     "type": "array",
                     "items": {
                         "type": "string",
-                    }
+                    },
                 }
             },
             "required": ["paths"],
@@ -34,7 +34,6 @@ JSON_SCHEMA = {
     },
     "required": ["dependencies"],
 }
-
 
 try:
     from gvgen import GvGen
@@ -45,23 +44,7 @@ else:
 
 
 class Node:
-    """
-    A class representing a Node in a dependency graph.
-
-    Attributes:
-        name (str): The name of the node.
-        edges (list): List of edges (dependencies) from this node to other nodes.
-        valid_dir (bool): Whether the directory for this node exists.
-    """
-
     def __init__(self, name: str, base_dir: str):
-        """
-        Initialize a Node object.
-
-        Args:
-            name (str): The name of the node.
-            base_dir (str): The base directory for the nodes.
-        """
         self.name = name
         self.edges = []
         self.valid_dir = self._verify_dir_exists(base_dir)
@@ -82,6 +65,9 @@ class Node:
 
         Args:
             edge (Node): The node to add as a dependency.
+
+        Raises:
+            Exception: Raises an exception if a circular reference is detected
         """
         self.edges.append(edge)
         if DRAW_GRAPH:
@@ -113,17 +99,100 @@ class Node:
         resolved.append(self)
 
 
-def find_dependencies_json_files(start_dir, max_depth=2):
+class Graph:
+    def __init__(self, base_dir: str):
+        self.nodes = {}
+        self.base_dir = base_dir
+
+    def add_node(self, stack_dir: str, dependencies: list):
+        """
+        Add a node to the graph.
+
+        Args:
+            stack_dir (str): Path to the directory which the Node represents.
+            dependencies (list): A list of dependencies extracted from the dependencies.json file
+
+        Raises:
+            Exception: Raises an exception if a dependency is referenced in the dependencies.json but has no physical directory
+        """
+        if stack_dir not in self.nodes:
+            self.nodes[stack_dir] = Node(stack_dir, self.base_dir)
+
+        node = self.nodes[stack_dir]
+        for dep in dependencies:
+            if dep not in self.nodes:
+                self.nodes[dep] = Node(dep, self.base_dir)
+            if not self.nodes[dep].valid_dir:
+                raise Exception(
+                    f"Unknown dependency detected: non-existent {dep} found in {stack_dir}/dependencies.json"
+                )
+            node.add_edge(self.nodes[dep])
+
+    def resolve_dependencies(self):
+        """
+        Resolve dependencies recursively starting from the first node in the nodes attribute.
+
+        Returns:
+            list: List of resolved dependencies
+        """
+        resolved = []
+        for node in self.nodes.values():
+            node.dep_resolve(resolved)
+        return resolved
+
+    def generate_dot_file(self):
+        """
+        Generate DOT file for creating a visual representation of the graph
+
+        Returns:
+            str: DOT-representation of the graph
+        """
+        try:
+            return g.dot()
+        except NameError:
+            logger.critical(
+                "Install gvgen via pip to generate a DOT file of this graph"
+            )
+
+    def topological_sort(self):
+        """
+        Perform topological sorting of nodes in required order of deploy.
+
+        Args:
+            nodes (iterable): Iterable of Node objects representing nodes in the graph.
+
+        Returns:
+            list: List of Node objects in topologically sorted order.
+        """
+        sorted_nodes = []
+        visited = set()
+
+        def visit(node):
+            if node in visited:
+                return
+            visited.add(node)
+            for edge in node.edges:
+                visit(edge)
+            sorted_nodes.append(node)
+
+        for node in self.nodes.values():
+            visit(node)
+
+        return sorted_nodes
+
+
+def find_stack_directories(start_dir, max_depth=2):
     """
-    Find all 'dependencies.json' files up to a specified depth in the directory tree.
+    Find all Terraform stacks specified depth in the directory tree.
 
     Args:
         start_dir (str): The starting directory to search from.
         max_depth (int, optional): Maximum depth to search in the directory tree. Defaults to 2.
 
     Returns:
-        list: List of file paths to 'dependencies.json' files found.
+        list: List of file paths to Terraform stack directories found.
     """
+
     results = []
     for root, _, files in os.walk(start_dir):
         depth = root[len(start_dir) :].count(os.sep)
@@ -131,6 +200,8 @@ def find_dependencies_json_files(start_dir, max_depth=2):
             continue
         if "dependencies.json" in files:
             results.append(os.path.join(root, "dependencies.json"))
+        elif "main.tf" in files:
+            results.append(root)
     return results
 
 
@@ -147,84 +218,41 @@ def extract_dependencies_from_file(file_path):
     with open(file_path, "r") as file:
         data = json.load(file)
         validate(data, JSON_SCHEMA)
-        return data["dependencies"]["paths"]
+    return data["dependencies"]["paths"]
 
 
-def topological_sort(nodes):
+def process_stack_files(base_dir):
     """
-    Perform topological sorting of nodes in required order of deploy.
+    Processes stack directories and adds nodes to a graph
 
     Args:
-        nodes (iterable): Iterable of Node objects representing nodes in the graph.
+        base_dir: The base directory containing all of the Terraform scaks
 
     Returns:
-        list: List of Node objects in topologically sorted order.
+        Graph: A graph object representing all of the stacks found
     """
-    sorted_nodes = []
-    visited = set()
+    graph = Graph(base_dir)
+    stack_files = find_stack_directories(base_dir, max_depth=2)
+    for file_path in stack_files:
+        if file_path.endswith("dependencies.json"):
+            stack_dir = f"./{os.path.relpath(os.path.dirname(file_path), base_dir)}"
+            dependencies = extract_dependencies_from_file(file_path)
+        else:
+            stack_dir = f"./{os.path.relpath(file_path, base_dir)}"
+            dependencies = []
+        graph.add_node(stack_dir, dependencies)
 
-    def visit(node):
-        if node in visited:
-            return
-        visited.add(node)
-        for edge in node.edges:
-            visit(edge)
-        sorted_nodes.append(node)
-
-    for node in nodes:
-        visit(node)
-
-    return sorted_nodes
-
-
-def create_nodes_from_dep_file(stack_dir, dependencies, stacks_dict, base_dir):
-    """
-    Create a Node object of the stack_dir and any dependencies in its dependencies.json file
-
-    Args:
-        stack_dir (str): Relative directory of the Terraform stack
-        dependencies (list): The dependencies extracted from the dependencies.json file
-        stacks_dict (dict): The list of stacks that have been processed thus far.
-        base_dir (str): The base directory for the nodes.
-
-    Raises:
-        Exception: If a non-existent stack is referenced in the dependencies.json file.
-    """
-    if stack_dir not in stacks_dict:
-        stacks_dict[stack_dir] = Node(stack_dir, base_dir)
-
-    node = stacks_dict[stack_dir]
-
-    for dep in dependencies:
-        if dep not in stacks_dict:
-            stacks_dict[dep] = Node(dep, base_dir)
-        if not stacks_dict[dep].valid_dir:
-            raise Exception(
-                f"Unknown dependency detected: non-existent {dep} found in {stack_dir}/dependencies.json"
-            )
-        node.add_edge(stacks_dict[dep])
+    return graph
 
 
 if __name__ == "__main__":
     start_dir = os.getcwd()
-    json_files = find_dependencies_json_files(start_dir, max_depth=2)
-    stacks_dict = {}
 
-    for file_path in json_files:
-        stack_dir = f"./{os.path.relpath(os.path.dirname(file_path), start_dir)}"
-        dependencies = extract_dependencies_from_file(file_path)
-        create_nodes_from_dep_file(stack_dir, dependencies, stacks_dict, start_dir)
-
-    resolved = []
-    for dep in stacks_dict.values():
-        dep.dep_resolve(resolved)
-
-    sorted_nodes = topological_sort(stacks_dict.values())
+    graph = process_stack_files(start_dir)
+    resolved = graph.resolve_dependencies()
+    sorted_nodes = graph.topological_sort()
 
     if DRAW_GRAPH:
-        try:
-            g.dot()
-        except NameError:
-            pass
+        print(graph.generate_dot_file())
 
     print(json.dumps([node.name for node in sorted_nodes]))

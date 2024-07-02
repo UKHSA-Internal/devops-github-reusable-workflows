@@ -4,11 +4,12 @@ import shutil
 import json
 import os
 from main import (
-    find_dependencies_json_files,
+    find_stack_directories,
     extract_dependencies_from_file,
-    topological_sort,
-    create_nodes_from_dep_file,
+    Graph,
+    process_stack_files,
 )
+
 
 class TestDependencyResolver(unittest.TestCase):
 
@@ -18,14 +19,19 @@ class TestDependencyResolver(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.test_dir)
 
+    def create_dir(self, dir_name):
+        path = os.path.join(self.test_dir, dir_name)
+        os.makedirs(path, exist_ok=True)
+        return path
+
     def write_json(self, dir_name, content, valid_json=True):
         """Writes JSON to dependencies.json in dir_name. Writes arbitrary content if valid_json is set to False"""
         path = os.path.join(self.test_dir, dir_name, "dependencies.json")
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        self.create_dir(os.path.dirname(path))
         if valid_json:
             json_content = {"dependencies": {"paths": content}}
         else:
-            json_content = content  
+            json_content = content
         with open(path, "w") as f:
             json.dump(json_content, f)
 
@@ -35,139 +41,99 @@ class TestDependencyResolver(unittest.TestCase):
         self.write_json("stack2", ["./stack3"])
         self.write_json("stack3", ["./stack1"])
 
-        stacks_dict = {}
-        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
-        for file_path in json_files:
-            stack_dir = (
-                f"./{os.path.relpath(os.path.dirname(file_path), self.test_dir)}"
-            )
-            dependencies = extract_dependencies_from_file(file_path)
-            create_nodes_from_dep_file(
-                stack_dir, dependencies, stacks_dict, self.test_dir
-            )
+        graph = process_stack_files(self.test_dir)
 
-        resolved = []
         with self.assertRaises(Exception) as context:
-            for dep in stacks_dict.values():
-                dep.dep_resolve(resolved)
+            graph.resolve_dependencies()
         self.assertIn("Circular reference detected", str(context.exception))
 
     def test_missing_dependencies_json(self):
-        """Test that no .json files are handled"""
-        stacks_dict = {}
-        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
-        for file_path in json_files:
-            stack_dir = (
-                f"./{os.path.relpath(os.path.dirname(file_path), self.test_dir)}"
-            )
-            dependencies = extract_dependencies_from_file(file_path)
-            create_nodes_from_dep_file(
-                stack_dir, dependencies, stacks_dict, self.test_dir
-            )
-
-        resolved = []
-        for dep in stacks_dict.values():
-            dep.dep_resolve(resolved)
-
+        """Test that situation with no stacks are handled"""
+        graph = process_stack_files(self.test_dir)
+        resolved = graph.resolve_dependencies()
         self.assertEqual(len(resolved), 0)
 
     def test_sorting_order(self):
-        """Test stacks are returned in expected order"""
+        """Ensure stacks are returned in expected order"""
         self.write_json("stack1", ["./stack3"])
         self.write_json("stack2", ["./stack1"])
         self.write_json("stack3", ["./stack4"])
         self.write_json("stack4", [])
 
-        stacks_dict = {}
-        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
-        for file_path in json_files:
-            stack_dir = (
-                f"./{os.path.relpath(os.path.dirname(file_path), self.test_dir)}"
-            )
-            dependencies = extract_dependencies_from_file(file_path)
-            create_nodes_from_dep_file(
-                stack_dir, dependencies, stacks_dict, self.test_dir
-            )
-
-        resolved = []
-        for dep in stacks_dict.values():
-            dep.dep_resolve(resolved)
-
-        sorted_nodes = topological_sort(stacks_dict.values())
+        graph = process_stack_files(self.test_dir)
+        graph.resolve_dependencies()
+        sorted_nodes = graph.topological_sort()
         self.assertEqual(
             [node.name for node in sorted_nodes],
             ["./stack4", "./stack3", "./stack1", "./stack2"],
         )
 
     def test_multiple_stacks_no_dependencies(self):
-        """Multiple stacks with no dependencies."""
+        """Ensure multiple stacks with no dependencies don't cause errors"""
         self.write_json("stack1", [])
         self.write_json("stack2", [])
         self.write_json("stack3", ["./stack1"])
 
-        stacks_dict = {}
-        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
-        for file_path in json_files:
-            stack_dir = (
-                f"./{os.path.relpath(os.path.dirname(file_path), self.test_dir)}"
-            )
-            dependencies = extract_dependencies_from_file(file_path)
-            create_nodes_from_dep_file(
-                stack_dir, dependencies, stacks_dict, self.test_dir
-            )
-
-        resolved = []
-        for dep in stacks_dict.values():
-            dep.dep_resolve(resolved)
-
-        sorted_nodes = topological_sort(stacks_dict.values())
+        graph = process_stack_files(self.test_dir)
+        graph.resolve_dependencies()
+        sorted_nodes = graph.topological_sort()
         self.assertEqual(len(sorted_nodes), 3)
         self.assertIn("./stack1", [node.name for node in sorted_nodes])
         self.assertIn("./stack2", [node.name for node in sorted_nodes])
         self.assertIn("./stack3", [node.name for node in sorted_nodes])
 
     def test_dependency_not_exist(self):
-        """Test a stack referencing a dependency with a non-existent directory"""
+        """Ensure exception is raised when stack referencing a dependency with a non-existent directory"""
         self.write_json("stack1", ["./stack2"])
 
-        stacks_dict = {}
-        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
-        for file_path in json_files:
-            stack_dir = (
-                f"./{os.path.relpath(os.path.dirname(file_path), self.test_dir)}"
-            )
-            dependencies = extract_dependencies_from_file(file_path)
-            with self.assertRaises(Exception) as context:
-                create_nodes_from_dep_file(
-                    stack_dir, dependencies, stacks_dict, self.test_dir
-                )
-
+        with self.assertRaises(Exception) as context:
+            process_stack_files(self.test_dir)
         self.assertIn("Unknown dependency detected", str(context.exception))
 
     def test_non_schema_dependencies_file(self):
         """Ensure exception is raised when dependencies.json doesn't meet JSON schema"""
 
         self.write_json("stack1", {"foo": {"bar": "hello"}}, valid_json=False)
-    
-        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
+
+        json_files = find_stack_directories(self.test_dir, max_depth=2)
         for file_path in json_files:
             with self.assertRaises(Exception) as context:
                 extract_dependencies_from_file(file_path)
-            
-            self.assertIn("'dependencies' is a required property", str(context.exception))
-    
+            self.assertIn(
+                "'dependencies' is a required property", str(context.exception)
+            )
+
     def test_malformed_dependencies_file(self):
         """Ensure exception is raised when dependencies.json is malformed (i.e. invalid JSON)"""
 
-        # write_json.json_content
         self.write_json("stack1", "hellohellohellohello", valid_json=False)
 
-        json_files = find_dependencies_json_files(self.test_dir, max_depth=2)
+        json_files = find_stack_directories(self.test_dir, max_depth=2)
         for file_path in json_files:
             with self.assertRaises(Exception) as context:
                 extract_dependencies_from_file(file_path)
-            
             self.assertIn("Failed validating", str(context.exception))
+
+    def test_standalone_stack_found(self):
+        """Ensure that standalone stacks are found when they are not referenced by any other stack and have no dependencies.json file"""
+
+        self.write_json("stack1", ["./stack3"])
+        self.write_json("stack2", ["./stack1"])
+        self.write_json("stack3", ["./stack4"])
+        self.write_json("stack4", [])
+        stack_99_path = self.create_dir("stack99")
+
+        with open(f"{stack_99_path}/main.tf", "w"):
+            graph = process_stack_files(self.test_dir)
+
+        graph.resolve_dependencies()
+        sorted_nodes = graph.topological_sort()
+        self.assertEqual(len(sorted_nodes), 5)
+        self.assertIn("./stack1", [node.name for node in sorted_nodes])
+        self.assertIn("./stack2", [node.name for node in sorted_nodes])
+        self.assertIn("./stack3", [node.name for node in sorted_nodes])
+        self.assertIn("./stack4", [node.name for node in sorted_nodes])
+        self.assertIn("./stack99", [node.name for node in sorted_nodes])
 
 
 if __name__ == "__main__":
