@@ -60,6 +60,8 @@ jobs:
   build:
     name: "Build Infrastructure - ${{ matrix.directory }}"
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
     needs:
       - define_matrix
       - check
@@ -124,10 +126,15 @@ jobs:
         with:
           tf_file: "${{ matrix.directory }}/terraform.tf"
 
+      # - name: Set up Terraform
+      #   uses: hashicorp/setup-terraform@v3
+      #   with:
+      #     terraform_version: "${{ steps.terraform_version.outputs.tf_version }}"
+
       - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "${{ steps.terraform_version.outputs.tf_version }}"
+        env:
+          TF_VERSION: "${{ steps.terraform_version.outputs.tf_version }}"
+        run: tfenv use "$TF_VERSION"
 
       - name: Determine Backend Type
         working-directory: "${{ matrix.directory }}"
