@@ -214,7 +214,7 @@ jobs:
 
       - name: SAST Scanning with Checkov (Deep)
         if: >-
-          ${{ inputs.environment_name == 'prd' ||
+          ${{ inputs.environment_name == 'prod' ||
           inputs.environment_name == 'preprd' }}
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@feature/DOE-127-checkov-scan
         with:
@@ -224,7 +224,7 @@ jobs:
       - name: Terraform Destructive Actions Check
         working-directory: "${{ matrix.directory }}"
         if: >-
-          ${{ inputs.environment_name == 'prd' ||
+          ${{ inputs.environment_name == 'prod' ||
            inputs.environment_name == 'preprd' }}
         run: |
           delete_count=$(terraform show -json tfplan | jq -r
