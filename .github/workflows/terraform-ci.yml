@@ -211,9 +211,9 @@ jobs:
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
           TERRAFORM_VARIABLES: "${{ steps.variables.outputs.tf_vars }}"
-        run: >-
-          terraform plan -no-color -input=false -out=tfplan
-          -compact-warnings ${TERRAFORM_VARIABLES}
+        run: |
+          terraform plan -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
+          terraform show -json tfplan | jq > tfplan.json
 
       - name: SAST Scanning with Checkov (Deep)
         if: >-
@@ -222,7 +222,8 @@ jobs:
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@feature/DOE-127-checkov-scan
         with:
           scan_type: deep
-          tfplan_file: "${{ matrix.directory }}/tfplan"
+          tfplan_file: "${{ matrix.directory }}/tfplan.json"
+          directory: "${{ matrix.directory }}"
 
       - name: Terraform Destructive Actions Check
         working-directory: "${{ matrix.directory }}"
@@ -230,10 +231,7 @@ jobs:
           ${{ inputs.environment_name == 'prod' ||
            inputs.environment_name == 'preprd' }}
         run: |
-          delete_count=$(terraform show -json tfplan | jq -r
-          '([.resource_changes[]?.change?.actions?] | flatten) +
-          ([.output_changes[]?.actions?] | flatten) | (map(select(.=="delete"))
-          | length)')
+          delete_count=$(terraform show -json tfplan | jq -r '([.resource_changes[]?.change?.actions?] | flatten) + ([.output_changes[]?.actions?] | flatten) | (map(select(.=="delete")) | length)')
 
           if [[ "$delete_count" -gt "0" ]]; then
             echo "WARNING - Resources will be destroyed in $(basename `pwd`). Manual approval is required!"
