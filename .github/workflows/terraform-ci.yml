@@ -62,6 +62,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
+    defaults:
+      run:
+        shell: bash
     needs:
       - define_matrix
       - check
