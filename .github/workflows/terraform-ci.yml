@@ -15,8 +15,6 @@ on:
         required: false
       AWS_SECRET_ACCESS_KEY:
         required: false
-      AWS_ASSUMED_ROLE:
-        required: false
       AWS_ACCOUNT_ID:
         required: false
       AWS_ROLE_NAME:
