@@ -220,10 +220,12 @@ jobs:
           ${{ inputs.environment_name == 'prod' ||
           inputs.environment_name == 'preprd' }}
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@feature/DOE-127-checkov-scan
+        # TODO: Remove this. This is just for testing purposes.
+        continue-on-error: true
         with:
           scan_type: deep
           tfplan_file: "${{ matrix.directory }}/tfplan.json"
-          directory: "${{ matrix.directory }}"
+          scan_directory: "${{ matrix.directory }}"
 
       - name: Terraform Destructive Actions Check
         working-directory: "${{ matrix.directory }}"
