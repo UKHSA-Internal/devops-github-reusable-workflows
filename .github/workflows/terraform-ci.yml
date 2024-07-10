@@ -42,7 +42,7 @@ jobs:
         run: tflint --recursive --disable-rule terraform_required_version --disable-rule terraform_required_providers
 
       - name: SAST Scanning with Checkov
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@feature/DOE-127-checkov-scan
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main
 
   define_matrix:
     name: Define directory matrix
@@ -122,7 +122,7 @@ jobs:
           done
 
       - name: Find Terraform version
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@feature/DOE-180-parse-tf-version
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@main
         id: terraform_version
         with:
           tf_file: "${{ matrix.directory }}/terraform.tf"
@@ -219,9 +219,7 @@ jobs:
         if: >-
           ${{ inputs.environment_name == 'prod' ||
           inputs.environment_name == 'preprd' }}
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@feature/DOE-127-checkov-scan
-        # TODO: Remove this. This is just for testing purposes.
-        continue-on-error: true
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main
         with:
           scan_type: deep
           tfplan_file: "${{ matrix.directory }}/tfplan.json"
