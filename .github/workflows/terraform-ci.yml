@@ -1,4 +1,4 @@
-name: "Terraform CI"
+name: "[CI] Lint and Deploy Terraform stacks"
 on:
   workflow_call:
     inputs:
@@ -139,7 +139,7 @@ jobs:
           backend_type=$(grep -oP 'backend\s+"?\K[^"\s]+' ./backend.tf)
           echo "backend_type=$backend_type" >> $GITHUB_OUTPUT
 
-      - name: Terraform Init with S3 Backend
+      - name: Terraform Init with AWS S3 Backend
         working-directory: "${{ matrix.directory }}"
         if: ${{ steps.backend.outputs.backend_type == 's3' }}
         env:
@@ -165,11 +165,8 @@ jobs:
           DIRECTORY: "${{ matrix.directory }}"
         run: |
           # TODO: Update this to actually init with Azure backend
-          state_name=$(basename "$DIRECTORY")
-          terraform init \
-            -backend-config=dynamodb_table="${AWS_REGION}"-state-locks \
-            -backend-config=bucket="${AWS_ACCOUNT_NUMBER}"-"${AWS_REGION}"-state \
-            -backend-config=key="${ENVIRONMENT_NAME}"/"$state_name"/terraform.tfstate
+          echo :x: Using an Azure backend is not currently supported! >> $GITHUB_SUMMARY
+          exit 1
 
       - name: Find Terraform variables
         id: variables
@@ -234,7 +231,7 @@ jobs:
           delete_count=$(terraform show -json tfplan | jq -r '([.resource_changes[]?.change?.actions?] | flatten) + ([.output_changes[]?.actions?] | flatten) | (map(select(.=="delete")) | length)')
 
           if [[ "$delete_count" -gt "0" ]]; then
-            echo "WARNING - Resources will be destroyed in $(basename `pwd`). Manual approval is required!"
+            echo ":heavy_exclamation_mark: WARNING - "$delete_count" resources will be destroyed in $(basename `pwd`)!" >> $GITHUB_SUMMARY
           fi
 
       - name: Terraform Apply
