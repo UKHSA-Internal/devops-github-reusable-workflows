@@ -4,5 +4,5 @@ A collection of reusable Workflows to help standardise the CI pipelines of teams
 
 ## `[CI] Lint and Deploy Terraform stacks`
 
-Deploy Terraform stack that use our standard folder structure. The Terraform code will be linted, scanned, planned and deployed. This does currently only supports using an AWS S3 backend but support for Azure backend is planned.
+Deploys Terraform code that uses our standard folder structure. The Terraform code will be linted, scanned, validated, planned and deployed. This currently only supports using an AWS S3 backend. Support for using an Azure backend is planned.
 
