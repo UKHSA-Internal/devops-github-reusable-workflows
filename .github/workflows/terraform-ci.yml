@@ -42,7 +42,7 @@ jobs:
         run: tflint --recursive --disable-rule terraform_required_version --disable-rule terraform_required_providers
 
       - name: SAST Scanning with Checkov
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@feature/DOE-207-checkov-hard-fail
 
   define_matrix:
     name: Define directory matrix
