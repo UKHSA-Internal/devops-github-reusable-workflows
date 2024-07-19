@@ -71,9 +71,8 @@ jobs:
           conclusion: "${{ env.job_status }}"
           check-run-id: ${{ steps.create_check.outputs.check-run-id }}
           details: |
-            `| Check              | Status              |
+            | Check              | Status              |
             | :----------------- | :-----------------: |
             | Terraform Format   |  ${{ env.tf_fmt }}  |
             | Terraform Linting  |  ${{ env.tf_lint }} |
             | Checkov Scan       |  ${{ env.tf_scan }} |
-            `
