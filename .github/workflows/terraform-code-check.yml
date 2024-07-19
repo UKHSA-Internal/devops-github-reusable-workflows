@@ -20,12 +20,11 @@ jobs:
           title: "Terraform code checks"
           summary: "Terraform code checks are currently in-progress"
           details: |
-            `| Check              | Status                             |
+            | Check              | Status                             |
             | :----------------: | :--------------------------------: |
             | Terraform Format   |  :hourglass_flowing_sand: Pending  |
             | Terraform Linting  |  :hourglass_flowing_sand: Pending  |
             | Checkov Scan       |  :hourglass_flowing_sand: Pending  |
-            `
 
       - name: Terraform Formatting
         id: tf_fmt
