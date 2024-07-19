@@ -36,7 +36,7 @@ jobs:
 
       - name: Check step status
         run: |
-          if [[ ${{ steps.tf_fmt.outcome }} == 'success' ]] && [[ ${{ steps.tf_fmt.outcome }} == 'success' ]] && [[ ${{ steps.tf_scan.outcome }} == 'success' ]]; then
+          if [[ "${{ steps.tf_fmt.outcome }}" == "success" && "${{ steps.tf_fmt.outcome }}" == "success" && "${{ steps.tf_scan.outcome }}" == "success" ]]; then
               echo "step_status=success" >> $GITHUB_ENV
           else
               echo "step_status=failure" >> $GITHUB_ENV
