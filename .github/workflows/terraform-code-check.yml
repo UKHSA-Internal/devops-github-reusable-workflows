@@ -19,6 +19,12 @@ jobs:
           status: "in_progress"
           title: "Terraform code checks"
           summary: "Terraform code checks are currently in-progress"
+          details: |
+            | Check              | Status                             |
+            | :----------------: | :--------------------------------: |
+            | Terraform Format   |  :hourglass_flowing_sand: Pending  |
+            | Terraform Linting  |  :hourglass_flowing_sand: Pending  |
+            | Checkov Scan       |  :hourglass_flowing_sand: Pending  | 
 
       - name: Terraform Formatting
         id: tf_fmt
@@ -37,17 +43,40 @@ jobs:
       - name: Check step status
         run: |
           if [ "${{ steps.tf_fmt.outcome }}" == "success" && "${{ steps.tf_fmt.outcome }}" == "success" && "${{ steps.tf_scan.outcome }}" == "success" ]; then
-              echo "step_status=success" >> $GITHUB_ENV
+              echo "job_status=success" >> $GITHUB_ENV
           else
-              echo "step_status=failure" >> $GITHUB_ENV
+              echo "job_status=failure" >> $GITHUB_ENV
           fi
+          tf_fmt=":white_check_mark: Passed" 
+          tf_lint=":white_check_mark: Passed"
+          tf_scan=":white_check_mark: Passed"
+          if [ "${{ steps.tf_fmt.outcome }}" != "success" ];
+            tf_fmt=:heavy_exclamation_mark: Failed"
+          fi
+          if [ "${{ steps.tf_lint.outcome }}" != "success" ];
+            tf_lint=:heavy_exclamation_mark: Failed"
+          fi
+          if [ "${{ steps.tf_scan.outcome }}" != "success" ];
+            tf_scan=:heavy_exclamation_mark: Failed"
+          fi
+
+          echo "tf_fmt=$tf_fmt" >> $GITHUB_ENV
+          echo "tf_lint=$tf_lint" >> $GITHUB_ENV
+          echo "tf_scan=$tf_scan" >> $GITHUB_ENV
+
 
       - name: Update check with result
         uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@feature/DOE-191-github-status-check
         with:
           name: "terraform-checks"
-          status: ${{ env.step_status }}
+          status: "completed"
           title: "Terraform code checks"
-          summary: "Terraform code checks have passed"
-          conclusion: ${{ env.step_status }}
+          summary: "Terraform code checks have completed"
+          conclusion: "${{ env.job_status }}"
           check-run-id: ${{ steps.create_check.outputs.check-run-id }}
+          details: |
+            | Check              | Status              |
+            | :----------------- | :-----------------: |
+            | Terraform Format   |  ${{ env.tf_fmt }}  |
+            | Terraform Linting  |  ${{ env.tf_lint }} |
+            | Checkov Scan       |  ${{ env.tf_scan }} | 
