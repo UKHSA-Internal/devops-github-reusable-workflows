@@ -11,14 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create pending check
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@feature/DOE-191-github-status-check
-        id: create_check
-        with:
-          name: "terraform-checks"
-          status: "in_progress"
-          title: "Terraform code checks"
-          summary: "Terraform code checks are currently in-progress"
+      # - name: Create pending check
+      #   uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@feature/DOE-191-github-status-check
+      #   id: create_check
+      #   with:
+      #     name: "terraform-checks"
+      #     status: "in_progress"
+      #     title: "Terraform code checks"
+      #     summary: "Terraform code checks are currently in-progress"
 
       - name: Terraform Formatting
         id: tf_fmt
@@ -42,12 +42,12 @@ jobs:
               echo "step_status=failure" >> $GITHUB_ENV
           fi
 
-      - name: Update check with result
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@feature/DOE-191-github-status-check
-        with:
-          name: "terraform-checks"
-          status: ${{ env.step_status }}
-          title: "Terraform code checks"
-          summary: "Terraform code checks have passed"
-          conclusion: ${{ env.step_status }}
-          check-run-id: ${{ steps.create_check.outputs.check-run-id }}
+      # - name: Update check with result
+      #   uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@feature/DOE-191-github-status-check
+      #   with:
+      #     name: "terraform-checks"
+      #     status: ${{ env.step_status }}
+      #     title: "Terraform code checks"
+      #     summary: "Terraform code checks have passed"
+      #     conclusion: ${{ env.step_status }}
+      #     check-run-id: ${{ steps.create_check.outputs.check-run-id }}
