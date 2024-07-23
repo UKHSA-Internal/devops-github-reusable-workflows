@@ -12,7 +12,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Create pending check
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@feature/doe-192-create-status-for-non-pr
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@main
         id: create_check
         with:
           name: "terraform-checks"
@@ -62,7 +62,7 @@ jobs:
           echo "tf_scan=$tf_scan" >> $GITHUB_ENV
 
       - name: Update check with result
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@feature/doe-192-create-status-for-non-pr
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@main
         with:
           name: "terraform-checks"
           status: "completed"
