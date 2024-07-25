@@ -12,6 +12,7 @@ jobs:
         id: release
         with:
           release-type: simple
+          target-branch: ${{ github.ref_name }}
 
       - uses: actions/checkout@v4
 
