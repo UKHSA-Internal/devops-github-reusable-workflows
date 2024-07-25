@@ -13,6 +13,7 @@ jobs:
         with:
           release-type: simple
           target-branch: ${{ github.ref_name }}
+          skip-github-pull-request: true
 
       - uses: actions/checkout@v4
 
