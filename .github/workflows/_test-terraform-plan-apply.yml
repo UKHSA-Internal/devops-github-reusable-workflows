@@ -15,3 +15,5 @@ jobs:
     with:
       repo: UKHSA-Internal/devops-terraform-example-project
       ref: "main"
+    secrets:
+      SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
