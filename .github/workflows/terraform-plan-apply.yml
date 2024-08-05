@@ -18,6 +18,16 @@ on:
         required: false
         type: boolean
         default: false
+      repo:
+        required: false
+        type: string
+        default: ${{ github.repository }}
+        description: "Specify the org/repo of the repo containing Terraform code. Normally left blank to clone calling repo."
+      ref:
+        required: false
+        type: string
+        default: ${{ github.ref }}
+        description: "Specify the branch of the Terraform code. Normally left blank to use calling ref."
 
     secrets:
       AWS_ACCESS_KEY_ID:
@@ -49,6 +59,9 @@ jobs:
       directories: "${{ steps.directories.outputs.json_directory_list }}"
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.ref }}
       - name: Determine order to run Terraform stacks
         uses: >-
           UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@main
@@ -70,6 +83,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.ref }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
