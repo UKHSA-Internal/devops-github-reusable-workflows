@@ -17,7 +17,12 @@ jobs:
       repo: UKHSA-Internal/devops-terraform-example-project
       ref: "main"
     permissions:
-      id-token: write
+      packages: read
+      contents: read
+      security-events: write
+      statuses: write
+      checks: write
+      id-token: write   
     secrets:
       SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
       AWS_ACCOUNT_ID: ${{ secrets.TEST_AWS_ACCOUNT_ID }}
