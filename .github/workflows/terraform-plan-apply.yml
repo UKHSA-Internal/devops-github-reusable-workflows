@@ -33,7 +33,11 @@ on:
       AWS_ROLE_NAME:
         required: false
       AWS_ACCOUNT_ID:
-        required: false 
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
       AZURE_SUBSCRIPTION_ID:
         required: false
       AZURE_TENANT_ID:
