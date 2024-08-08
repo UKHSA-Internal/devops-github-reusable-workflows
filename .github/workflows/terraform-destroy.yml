@@ -61,7 +61,7 @@ jobs:
           reverse: true
 
   destroy:
-    name: "Build Infrastructure - ${{ matrix.directory }}"
+    name: "Destroy Infrastructure - ${{ matrix.directory }}"
     runs-on: ubuntu-latest
     environment: "${{ inputs.environment_name }}"
     defaults:
