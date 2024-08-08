@@ -65,6 +65,11 @@ jobs:
     name: Destroy existing infrastructure
     if: ${{ inputs.destroy_before_apply == 'true' }}
     uses: ./.github/workflows/terraform-destroy.yml
+    with:
+      environment_name: ${{ inputs.environment_name }}
+      aws_region: ${{ inputs.aws_region }}
+      repo: ${{ inputs.repo }}
+      ref:  ${{ inputs.ref }}
 
   check:
     name: Lint and SAST Scan Terraform code
