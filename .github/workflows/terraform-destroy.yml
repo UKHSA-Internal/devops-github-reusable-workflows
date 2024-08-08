@@ -43,7 +43,7 @@ on:
 
 jobs:
   define_matrix:
-    name: Define directory matrix
+    name: Define directory matrix for destroy
     runs-on: ubuntu-latest
     outputs:
       directories: "${{ steps.directories.outputs.json_directory_list }}"

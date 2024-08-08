@@ -61,6 +61,10 @@ on:
         description: "Deprecated: Use either TF_MODULES_SSH_DEPLOY_KEY or REPO_SSH_DEPLOY_KEY instead."
         
 jobs:
+  check:
+    name: Lint and SAST Scan Terraform code
+    uses: ./.github/workflows/terraform-code-check.yml
+
   destroy:
     name: Destroy existing infrastructure
     if: ${{ inputs.destroy_before_apply }}
@@ -70,13 +74,10 @@ jobs:
       aws_region: ${{ inputs.aws_region }}
       repo: ${{ inputs.repo }}
       ref:  ${{ inputs.ref }}
-
-  check:
-    name: Lint and SAST Scan Terraform code
-    uses: ./.github/workflows/terraform-code-check.yml
+    secrets: inherit
 
   define_matrix:
-    name: Define directory matrix
+    name: Define directory matrix for build
     runs-on: ubuntu-latest
     outputs:
       directories: "${{ steps.directories.outputs.json_directory_list }}"
@@ -95,12 +96,14 @@ jobs:
     name: "Build Infrastructure - ${{ matrix.directory }}"
     runs-on: ubuntu-latest
     environment: "${{ inputs.environment_name }}"
+    if: always() && (needs.destroy.result == 'skipped' || needs.destroy.result == 'success')
     defaults:
       run:
         shell: bash
     needs:
       - define_matrix
       - check
+      - destroy
     strategy:
       matrix:
         directory: "${{ fromJSON(needs.define_matrix.outputs.directories) }}"
