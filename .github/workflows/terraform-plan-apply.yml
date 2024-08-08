@@ -63,7 +63,7 @@ on:
 jobs:
   destroy:
     name: Destroy existing infrastructure
-    if: ${{ inputs.destroy_before_apply == 'true' }}
+    if: ${{ inputs.destroy_before_apply }}
     uses: ./.github/workflows/terraform-destroy.yml
     with:
       environment_name: ${{ inputs.environment_name }}
