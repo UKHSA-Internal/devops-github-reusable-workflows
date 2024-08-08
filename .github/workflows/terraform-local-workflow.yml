@@ -70,7 +70,7 @@ jobs:
         if: ${{ inputs.run_tflint == 'true' }}
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_PAT }}
 
       - name: SAST Scanning with Checkov
         if: ${{ inputs.run_light_sast == 'true' }}
