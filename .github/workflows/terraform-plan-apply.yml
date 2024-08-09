@@ -48,6 +48,8 @@ on:
         required: false
       SSH_DEPLOY_KEY:
         required: false
+      DEVOPS_SSH_DEPLOY_KEY:
+        required: false
 
 jobs:
   check:
@@ -64,7 +66,7 @@ jobs:
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
-          ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
+          ssh-key: ${{ secrets.DEVOPS_SSH_DEPLOY_KEY }}
       - name: Determine order to run Terraform stacks
         uses: >-
           UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@main
@@ -90,7 +92,7 @@ jobs:
         with:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
-          ssh-key: ${{ secrets.SSH_DEPLOY_KEY }}
+          ssh-key: ${{ secrets.DEVOPS_SSH_DEPLOY_KEY }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
