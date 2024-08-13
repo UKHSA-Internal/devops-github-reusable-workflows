@@ -25,6 +25,10 @@ on:
       run_deep_sast: # requires inputs.plan == 'true'.
         required: false
         type: string
+      tflint_module_scan:
+        required: false
+        type: boolean
+        default: false
       plan: # requires AWS|Azure credentials to be configured.
         required: false
         type: string
@@ -126,7 +130,7 @@ jobs:
     name: "Build Infrastructure - ${{ matrix.directory }}"
     runs-on: ubuntu-latest
     container:
-      image: catthehacker/ubuntu:act-22.04
+      image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
     if: ${{ inputs.plan == 'true' }}
     defaults:
       run:
@@ -297,6 +301,14 @@ jobs:
             echo "No changes detected in the Terraform plan."
             echo '{}' > tfplan.json
           fi
+
+      - name: Terraform linting applied to dependent modules.
+        if: ${{ inputs.tflint_module_scan }}
+        continue-on-error: true
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@main
+        with: 
+          scan_modules: true
+          github-token: ${{ secrets.GITHUB_PAT }}
 
       - name: SAST Scanning with Checkov (Deep)
         uses: ukhsa-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main

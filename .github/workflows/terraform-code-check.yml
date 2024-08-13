@@ -34,7 +34,7 @@ jobs:
       - name: Terraform Linting with tflint
         id: tf_lint
         continue-on-error: true
-        run: tflint --recursive --disable-rule terraform_required_version --disable-rule terraform_required_providers
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@main
 
       - name: SAST Scan Terraform code
         id: tf_scan
