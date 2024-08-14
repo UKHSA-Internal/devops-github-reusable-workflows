@@ -282,7 +282,7 @@ jobs:
       - name: Terraform linting applied to dependent modules.
         if: ${{ inputs.tflint_module_scan }}
         continue-on-error: true
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@main
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@feature/DOE-237-csp-tf-lint-ruleset
         with: 
           scan_modules: true
       
