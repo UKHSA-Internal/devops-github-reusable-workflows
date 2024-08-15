@@ -81,7 +81,7 @@ jobs:
 
       - name: Terraform Linting with tflint
         id: tf_lint
-        if: ${{ inputs.tflint_module_scan == "false" }}
+        if: ${{ inputs.tflint_module_scan == false }}
         continue-on-error: true
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@feature/DOE-237-csp-tf-lint-ruleset
 
