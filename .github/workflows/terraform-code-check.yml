@@ -6,6 +6,10 @@ on:
         required: false
         type: boolean
         default: false
+    secrets:
+      TF_MODULES_SSH_DEPLOY_KEY:
+        required: false
+        description: "The SSH key used to clone Terraform modules downloaded as part of the Terraform init"
 
 jobs:
   define_matrix:
@@ -46,7 +50,8 @@ jobs:
         with:
           scan_modules: 'true'
           tf_directory: ${{ matrix.directory }}
-
+        env:
+          SSH_DEPLOY_KEY: "${{ secrets.TF_MODULES_SSH_DEPLOY_KEY }}"
 
   recursive-checks:
     name: Lint and Scan Terraform code
