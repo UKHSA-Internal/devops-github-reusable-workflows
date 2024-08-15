@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         directory: "${{ fromJSON(needs.define_matrix.outputs.directories) }}"
-      max-parallel: 1
+      max-parallel: 5
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +48,7 @@ jobs:
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@feature/DOE-237-csp-tf-lint-ruleset
         with:
           scan_modules: true
+          tf_directory: ${{ matrix.directory }}
 
 
   recursive-checks:
