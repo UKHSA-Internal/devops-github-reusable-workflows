@@ -18,10 +18,6 @@ on:
         required: false
         type: boolean
         default: false
-      tflint_module_scan:
-        required: false
-        type: boolean
-        default: false
       destroy_before_apply:
         required: false
         type: boolean
@@ -99,8 +95,6 @@ jobs:
   build:
     name: "Build Infrastructure - ${{ matrix.directory }}"
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
     environment: "${{ inputs.environment_name }}"
     if: always() && (needs.destroy.result == 'skipped' || needs.destroy.result == 'success')
     defaults:
@@ -278,13 +272,6 @@ jobs:
         run: |
           terraform plan -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           terraform show -json tfplan | jq > tfplan.json
-
-      - name: Terraform linting applied to dependent modules.
-        if: ${{ inputs.tflint_module_scan }}
-        continue-on-error: true
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@feature/DOE-237-csp-tf-lint-ruleset
-        with: 
-          scan_modules: true
       
       - name: SAST Scanning with Checkov (Deep)
         if: ${{ inputs.checkov_deep_scan }}
