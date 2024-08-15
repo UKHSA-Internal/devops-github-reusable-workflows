@@ -272,7 +272,7 @@ jobs:
         run: |
           terraform plan -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           terraform show -json tfplan | jq > tfplan.json
-      
+
       - name: SAST Scanning with Checkov (Deep)
         if: ${{ inputs.checkov_deep_scan }}
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main

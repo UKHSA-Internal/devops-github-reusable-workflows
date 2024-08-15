@@ -16,10 +16,7 @@ jobs:
       directories: "${{ steps.directories.outputs.json_directory_list }}"
     steps:
       - uses: actions/checkout@v4
-        with:
-          repository: ${{ inputs.repo }}
-          ref: ${{ inputs.ref }}
-          ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
+
       - name: Determine order to run Terraform stacks
         uses: >-
           UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@main
@@ -82,7 +79,7 @@ jobs:
       - name: Terraform Linting with tflint
         id: tf_lint
         continue-on-error: true
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@feature/DOE-237-csp-tf-lint-ruleset
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@main
 
       - name: SAST Scan Terraform code
         id: tf_scan
