@@ -48,7 +48,7 @@ jobs:
         continue-on-error: true
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@feature/DOE-237-csp-tf-lint-ruleset
         with:
-          scan_modules: true
+          scan_modules: "true"
 
 
   recursive-checks:
