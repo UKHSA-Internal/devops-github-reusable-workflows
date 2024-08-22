@@ -12,18 +12,6 @@ on:
 jobs:
   deploy_tf_stacks_regression_test:
     name: Test using devops-terraform-example-project@main
-    uses: ./.github/workflows/terraform-plan-apply.yml
-    with:
-      repo: UKHSA-Internal/devops-terraform-example-project
-      ref: "main"
-    permissions:
-      packages: read
-      contents: read
-      security-events: write
-      statuses: write
-      checks: write
-      id-token: write   
-    secrets:
-      REPO_SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-      AWS_ACCOUNT_ID: ${{ secrets.TEST_AWS_ACCOUNT_ID }}
-      AWS_ROLE_NAME: ${{ secrets.TEST_AWS_ROLE_NAME }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo "No build required" '
