@@ -1,0 +1,114 @@
+name: "[Analysis] Run post deployment QA checks"
+on:
+  workflow_call:
+    inputs:
+      environment_name:
+        required: false
+        default: dev
+        type: string
+      aws_region:
+        required: false
+        default: eu-west-2
+        type: string
+      checkov_deep_scan:
+        required: false
+        type: boolean
+        default: true
+      scheduled_run:
+        required: false
+        type: boolean
+        default: false
+      zap_api_scan:
+        required: false
+        type: boolean
+        default: false
+      zap_endpoint_scan:
+        required: false
+        type: boolean
+        default: false
+      prowler_scan:
+        required: false
+        type: boolean
+        default: false
+      create_threat_model:
+        required: false
+        type: boolean
+        default: false
+
+    secrets:
+      AWS_ROLE_NAME:
+        required: false
+      AWS_ACCOUNT_ID:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_SECRET_ACCESS_KEY:
+        required: false
+      AZURE_SUBSCRIPTION_ID:
+        required: false
+      AZURE_TENANT_ID:
+        required: false
+      AZURE_CLIENT_ID:
+        required: false
+      AZURE_RESOURCE_GROUP_NAME:
+        required: false
+      TF_MODULES_SSH_DEPLOY_KEY:
+        required: false
+        description: "The SSH key used to clone Terraform modules downloaded as part of the Terraform init"
+      REPO_SSH_DEPLOY_KEY:
+        required: false
+        description: "The SSH key used to checkout private remote repos"
+        
+jobs:
+  scheduled-qa-scan:
+    name: Lint and run deep SAST scan on IaC configuration.
+    if: ${{ inputs.scheduled_run == true }}
+    uses: ./.github/workflows/terraform-plan-apply.yml
+    with:
+      environment_name: ${{ inputs.environment_name }}
+      aws_region: ${{ inputs.aws_region }}
+      checkov_deep_scan: 'true'
+      tf_action: 'plan'
+    secrets: inherit
+  
+  drift-detection:
+    name: Checking for configuration differences between SCM and what's deployed.
+    environment: "${{ inputs.environment_name }}"
+    if: ${{ inputs.scheduled_run == true }}
+    runs-on: ubuntu-latest
+    with:
+      environment_name: ${{ inputs.environment_name }}
+      aws_region: ${{ inputs.aws_region }}
+    secrets: inherit
+    steps:
+      - name: Drift detection workflow/action.
+        run: |
+          echo "#TODO; Download plan and perform drift detection composite action."
+  
+  cloud-configuration-scan:
+    name: Run scans to check for cloud misconfigurations, DAST and threat model.
+    environment: "${{ inputs.environment_name }}"
+    with:
+      environment_name: ${{ inputs.environment_name }}
+      aws_region: ${{ inputs.aws_region }}
+    secrets: inherit
+    steps:
+      - name: DAST - ZAP API workflow/action.
+        if: ${{ inputs.zap_api_scan == true }}
+        run: |
+          echo "#TODO; Run ZAP API scan."
+
+      - name: DAST - ZAP baseline scan workflow/action.
+        if: ${{ inputs.zap_endpoint_scan == true }}
+        run: |
+          echo "#TODO; Run ZAP baseline scan against endpoints."
+
+      - name: CSPM - Run Prowler workflow/action.
+        if: ${{ inputs.prowler_scan == true }}
+        run: |
+          echo "#TODO; Run Prowler."
+
+      - name: Create threat model using Irius Risk workflow/action.
+        if: ${{ inputs.create_threat_model == true }}
+        run: |
+          echo "#TODO; Create master plan and run Irius Risk."
