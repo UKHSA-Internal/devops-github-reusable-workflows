@@ -99,13 +99,8 @@ jobs:
 
   plan:
     name: "Plan Infrastructure - ${{ matrix.directory }}"
-    runs-on: ubuntu-latest
-    environment: "${{ inputs.environment_name }}"
     if: always() && (needs.destroy.result == 'skipped' || needs.destroy.result == 'success')
     uses: ./.github/workflows/terraform-core.yml
-    defaults:
-      run:
-        shell: bash
     needs:
       - define_matrix
       - check
@@ -156,12 +151,7 @@ jobs:
   apply:
     name: "Apply Infrastructure - ${{ matrix.directory }}"
     if: ${{ inputs.tf_action == "apply" }}
-    runs-on: ubuntu-latest
-    environment: "${{ inputs.environment_name }}"
     uses: ./.github/workflows/terraform-core.yml
-    defaults:
-      run:
-        shell: bash
     needs:
       - define_matrix
       - plan

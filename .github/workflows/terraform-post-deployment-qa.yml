@@ -76,11 +76,8 @@ jobs:
     environment: "${{ inputs.environment_name }}"
     if: ${{ inputs.scheduled_run == true }}
     runs-on: ubuntu-latest
-    with:
-      environment_name: ${{ inputs.environment_name }}
-      aws_region: ${{ inputs.aws_region }}
-    secrets: inherit
     steps:
+      - uses: actions/checkout@v4
       - name: Drift detection workflow/action.
         run: |
           echo "#TODO; Download plan and perform drift detection composite action."
@@ -88,11 +85,9 @@ jobs:
   cloud-configuration-scan:
     name: Run scans to check for cloud misconfigurations, DAST and threat model.
     environment: "${{ inputs.environment_name }}"
-    with:
-      environment_name: ${{ inputs.environment_name }}
-      aws_region: ${{ inputs.aws_region }}
-    secrets: inherit
+    runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: DAST - ZAP API workflow/action.
         if: ${{ inputs.zap_api_scan == true }}
         run: |
