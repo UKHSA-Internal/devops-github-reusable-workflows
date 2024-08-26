@@ -22,6 +22,11 @@ on:
         description: "The list of directories for the matrix"
         required: true
         type: string
+      max_parallel:
+        description: "Maximum number of parallel jobs"
+        required: false
+        type: number
+        default: 1
       repo:
         required: false
         type: string
@@ -71,7 +76,7 @@ jobs:
     strategy:
       matrix:
         directory: "${{ fromJSON(inputs.directories) }}"
-      max-parallel: 1
+      max-parallel: ${{ inputs.max_parallel }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -225,7 +230,6 @@ jobs:
           echo "tf_vars=$full_variable_flags" >> $GITHUB_OUTPUT
 
       - name: Terraform Plan
-        if: ${{ inputs.tf_action == 'plan' }}
         working-directory: "${{ matrix.directory }}"
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
@@ -243,7 +247,6 @@ jobs:
           echo "dir_artifact_name=$dir_artifact_name" >> $GITHUB_ENV
 
       - name: Upload Terraform plan to workflow
-        if: ${{ inputs.tf_action == 'plan' }}
         uses: actions/upload-artifact@v4
         with: 
           name: "${{ env.dir_artifact_name }}_tfplan"
@@ -252,22 +255,6 @@ jobs:
           retention-days: 1
           overwrite: true
           if-no-files-found: error
-
-      - name: Check if Terraform plan file exists
-        working-directory: "${{ matrix.directory }}"
-        run: |
-          if [ -f tfplan ]; then
-            echo "tfplan_exists=true" >> $GITHUB_ENV
-          else
-            echo "tfplan_exists=false" >> $GITHUB_ENV
-          fi
-
-      - name: Download Terraform plan to workflow
-        if: ${{ env.plan_exists == 'false' && inputs.tf_action == 'apply' }}
-        uses: actions/download-artifact@v4
-        with: 
-          name: "${{ env.dir_artifact_name }}_tfplan"
-          path: "${{ matrix.directory }}"
 
       - name: Terraform Destructive Actions Check
         working-directory: "${{ matrix.directory }}"

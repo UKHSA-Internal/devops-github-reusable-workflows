@@ -10,14 +10,6 @@ on:
         required: false
         default: eu-west-2
         type: string
-      checkov_deep_scan:
-        required: false
-        type: boolean
-        default: true
-      scheduled_run:
-        required: false
-        type: boolean
-        default: false
       zap_api_scan:
         required: false
         type: boolean
@@ -29,11 +21,11 @@ on:
       prowler_scan:
         required: false
         type: boolean
-        default: false
+        default: true
       create_threat_model:
         required: false
         type: boolean
-        default: false
+        default: true
 
     secrets:
       AWS_ROLE_NAME:
@@ -52,36 +44,8 @@ on:
         required: false
       AZURE_RESOURCE_GROUP_NAME:
         required: false
-      TF_MODULES_SSH_DEPLOY_KEY:
-        required: false
-        description: "The SSH key used to clone Terraform modules downloaded as part of the Terraform init"
-      REPO_SSH_DEPLOY_KEY:
-        required: false
-        description: "The SSH key used to checkout private remote repos"
         
 jobs:
-  # scheduled-qa-scan:
-  #   name: Lint and run deep SAST scan on IaC configuration.
-  #   if: ${{ inputs.scheduled_run == true }}
-  #   uses: ./.github/workflows/terraform-plan-apply.yml
-  #   with:
-  #     environment_name: ${{ inputs.environment_name }}
-  #     aws_region: ${{ inputs.aws_region }}
-  #     checkov_deep_scan: 'true'
-  #     tf_action: 'plan'
-  #   secrets: inherit
-  
-  drift-detection:
-    name: Checking for configuration differences between SCM and what's deployed.
-    environment: "${{ inputs.environment_name }}"
-    if: ${{ inputs.scheduled_run == true }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Drift detection workflow/action.
-        run: |
-          echo "#TODO; Download plan and perform drift detection composite action."
-  
   cloud-configuration-scan:
     name: Run scans to check for cloud misconfigurations, DAST and threat model.
     environment: "${{ inputs.environment_name }}"

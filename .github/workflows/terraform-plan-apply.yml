@@ -99,7 +99,10 @@ jobs:
 
   plan:
     name: "Plan Infrastructure - ${{ matrix.directory }}"
-    if: always() && (needs.destroy.result == 'skipped' || needs.destroy.result == 'success')
+    if: >-
+      always() && (needs.destroy.result == 'skipped' || 
+      needs.destroy.result == 'success') && 
+      inputs.tf_action == 'plan'
     uses: ./.github/workflows/terraform-core.yml
     needs:
       - define_matrix
@@ -111,8 +114,8 @@ jobs:
       repo: ${{ inputs.repo }}
       ref:  ${{ inputs.ref }}
       directories: "${{ needs.define_matrix.outputs.directories }}"
-      tf_action: 'plan'
       destructive_action_check: ${{ inputs.destructive_action_check }}
+      max_parallel: 5
     secrets: inherit
 
   deep_check:
@@ -134,7 +137,7 @@ jobs:
       - name: Download Terraform plan to workflow
         uses: actions/download-artifact@v4
         with: 
-          name: "${{ matrix.directory }}/tfplan"
+          name: "${{ env.dir_artifact_name }}_tfplan"
           path: "${{ matrix.directory }}"
       
       - name: SAST Scanning with Checkov (Deep)
@@ -154,8 +157,6 @@ jobs:
     uses: ./.github/workflows/terraform-core.yml
     needs:
       - define_matrix
-      - plan
-      - deep_check
     with:
       environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
