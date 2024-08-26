@@ -168,6 +168,7 @@ jobs:
 
   post-deployment-qa-checks:
     name: Run post deployment QA checks.
+    if: ${{ inputs.tf_action == "apply" }}
     uses: ./.github/workflows/terraform-post-deployment-qa.yml
     needs: apply
     with:
