@@ -239,7 +239,8 @@ jobs:
           terraform show -json tfplan | jq > tfplan.json
 
           # Manipulate stack directory name to be compatible with the uploade and download actions.
-          echo "dir_artifact_name=${{ matrix.directory//\//_ }}" >> $GITHUB_ENV
+          dir_artifact_name=$(echo "${{ matrix.directory }}" | sed 's/\//_/g')
+          echo "dir_artifact_name=$dir_artifact_name" >> $GITHUB_ENV
 
       - name: Upload Terraform plan to workflow
         if: ${{ inputs.tf_action == 'plan' }}
