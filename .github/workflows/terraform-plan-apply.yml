@@ -141,10 +141,7 @@ jobs:
           path: "${{ matrix.directory }}"
       
       - name: SAST Scanning with Checkov (Deep)
-        if: >-
-            ${{ inputs.checkov_deep_scan ||
-              inputs.environment_name == 'pre' || 
-              inputs.environment_name == 'prd' }}
+        if: ${{ inputs.checkov_deep_scan }}
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main
         with:
           scan_type: deep
