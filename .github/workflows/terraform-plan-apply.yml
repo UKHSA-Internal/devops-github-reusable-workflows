@@ -67,7 +67,7 @@ on:
 jobs:
   check:
     name: Lint and SAST Scan Terraform code
-    if: ${{ !contains('tst,pre,prd', inputs.environment_name) }}
+    if: ${{ !contains('qat,pre,prd', inputs.environment_name) }}
     uses: ./.github/workflows/terraform-code-check.yml
 
   destroy:
