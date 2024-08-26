@@ -238,11 +238,14 @@ jobs:
           terraform plan -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           terraform show -json tfplan | jq > tfplan.json
 
+          # Manipulate stack directory name to be compatible with the uploade and download actions.
+          echo "dir_artifact_name=${{ matrix.directory//\//_ }}" >> $GITHUB_ENV
+
       - name: Upload Terraform plan to workflow
         if: ${{ inputs.tf_action == 'plan' }}
         uses: actions/upload-artifact@v4
         with: 
-          name: "${{ matrix.directory }}/tfplan"
+          name: "${{ env.dir_artifact_name }}_tfplan"
           path: "${{ matrix.directory }}/tfplan*"
           compression-level: 1
           retention-days: 1
@@ -262,7 +265,7 @@ jobs:
         if: ${{ env.plan_exists == 'false' && inputs.tf_action == 'apply' }}
         uses: actions/download-artifact@v4
         with: 
-          name: "${{ matrix.directory }}/tfplan"
+          name: "${{ env.dir_artifact_name }}_tfplan"
           path: "${{ matrix.directory }}"
 
       - name: Terraform Destructive Actions Check
