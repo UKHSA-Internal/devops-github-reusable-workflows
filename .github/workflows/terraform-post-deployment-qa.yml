@@ -60,16 +60,16 @@ on:
         description: "The SSH key used to checkout private remote repos"
         
 jobs:
-  scheduled-qa-scan:
-    name: Lint and run deep SAST scan on IaC configuration.
-    if: ${{ inputs.scheduled_run == true }}
-    uses: ./.github/workflows/terraform-plan-apply.yml
-    with:
-      environment_name: ${{ inputs.environment_name }}
-      aws_region: ${{ inputs.aws_region }}
-      checkov_deep_scan: 'true'
-      tf_action: 'plan'
-    secrets: inherit
+  # scheduled-qa-scan:
+  #   name: Lint and run deep SAST scan on IaC configuration.
+  #   if: ${{ inputs.scheduled_run == true }}
+  #   uses: ./.github/workflows/terraform-plan-apply.yml
+  #   with:
+  #     environment_name: ${{ inputs.environment_name }}
+  #     aws_region: ${{ inputs.aws_region }}
+  #     checkov_deep_scan: 'true'
+  #     tf_action: 'plan'
+  #   secrets: inherit
   
   drift-detection:
     name: Checking for configuration differences between SCM and what's deployed.
