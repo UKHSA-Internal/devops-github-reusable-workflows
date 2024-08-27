@@ -67,7 +67,7 @@ on:
         
 jobs:
   initialise:
-    name: "Initialise Terraform for - ${{ matrix.directory }}"
+    name: "Initialise and run Terraform for - ${{ matrix.directory }}"
     runs-on: ubuntu-latest
     environment: "${{ inputs.environment_name }}"
     defaults:
