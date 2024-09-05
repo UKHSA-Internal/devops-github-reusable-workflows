@@ -14,19 +14,19 @@ on:
         required: false
         type: boolean
         default: false
-      tf_action:
+      apply_terraform:
+        required: false
+        type: boolean
+        default: true
+      terraform_action:
         required: false
         type: string
-        default: "plan"
+        default: "apply"
+        description: "'apply' or 'destroy'. Has no effect if `apply_terraform` is false."
       directories:
         description: "The list of directories for the matrix"
         required: true
         type: string
-      max_parallel:
-        description: "Maximum number of parallel jobs"
-        required: false
-        type: number
-        default: 1
       repo:
         required: false
         type: string
@@ -76,7 +76,8 @@ jobs:
     strategy:
       matrix:
         directory: "${{ fromJSON(inputs.directories) }}"
-      max-parallel: ${{ inputs.max_parallel }}
+      # Intentionally kept to run to prevent race conditions.
+      max-parallel: 1
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -85,6 +86,18 @@ jobs:
           ref: ${{ inputs.ref }}
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
+      - name: Print environment
+        run: |
+          echo ## ${{ matrix.directory }} ## >> $GITHUB_SUMMARY
+          echo environment_name: ${{ inputs.environment_name }} >> $GITHUB_SUMMARY
+          echo aws_region: ${{ inputs.aws_region }} >> $GITHUB_SUMMARY
+          echo destructive_action_check: ${{ inputs.destructive_action_check }} >> $GITHUB_SUMMARY
+          echo apply_terraform: ${{ inputs.apply_terraform }} >> $GITHUB_SUMMARY
+          echo terraform_action: ${{ inputs.terraform_action }} >> $GITHUB_SUMMARY
+          echo directories: ${{ inputs.directories }} >> $GITHUB_SUMMARY
+          echo repo: ${{ inputs.repo }} >> $GITHUB_SUMMARY
+          echo ref: ${{ inputs.ref }} >> $GITHUB_SUMMARY
+      
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         env:
@@ -121,6 +134,7 @@ jobs:
 
           for FILE in "${files_to_copy[@]}"; do
             if [[ ! -f "$DIRECTORY"/"$FILE" ]]; then
+                echo "WARN - $(basename "$DIRECTORY") is missing a "$FILE" file! This behaviour is deprecated - please ensure each stack has its own "$FILE" file."
                 cp "$FILE" "$DIRECTORY"/
             else
               echo "NOTE - $(basename "$DIRECTORY") has its own "$FILE" file. Not copying "$FILE" from root"
@@ -145,6 +159,19 @@ jobs:
           backend_type=$(grep -oP 'backend\s+"?\K[^"\s]+' ./backend.tf)
           echo "backend_type=$backend_type" >> $GITHUB_OUTPUT
 
+      - name: Add SSH deploy key to ssh-agent
+        env:
+          SSH_DEPLOY_KEY: "${{ secrets.TF_MODULES_SSH_DEPLOY_KEY || secrets.SSH_DEPLOY_KEY }}"
+        run: |
+          # Add SSH deploy key to ssh-agent to allow internal or private UKHSA-Internal
+          # modules to be downloaded during terraform init.
+          if [ -n "$SSH_DEPLOY_KEY" ]; then
+            mkdir -p ~/.ssh
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+            eval $(ssh-agent -s)
+            echo "$SSH_DEPLOY_KEY" | tr -d '\r' | ssh-add -
+          fi
+
       - name: Terraform Init with AWS S3 Backend
         working-directory: "${{ matrix.directory }}"
         if: ${{ steps.backend.outputs.backend_type == 's3' }}
@@ -152,15 +179,8 @@ jobs:
           AWS_ACCOUNT_ID: "${{ secrets.AWS_ACCOUNT_ID }}"
           AWS_REGION: "${{ inputs.aws_region }}"
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
-          SSH_DEPLOY_KEY: "${{ secrets.TF_MODULES_SSH_DEPLOY_KEY || secrets.SSH_DEPLOY_KEY }}"
           DIRECTORY: "${{ matrix.directory }}"
         run: |
-          if [ -n "$SSH_DEPLOY_KEY" ]; then
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            eval $(ssh-agent -s)
-            echo "$SSH_DEPLOY_KEY" | tr -d '\r' | ssh-add -
-          fi
           state_name=$(basename "$DIRECTORY")
           terraform init \
             -backend-config=dynamodb_table="${AWS_REGION}"-state-locks \
@@ -176,16 +196,10 @@ jobs:
           ARM_USE_OIDC: true
           ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-          SSH_DEPLOY_KEY: "${{ secrets.TF_MODULES_SSH_DEPLOY_KEY || secrets.SSH_DEPLOY_KEY }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
         run: |
-          if [ -n "$SSH_DEPLOY_KEY" ]; then
-            mkdir -p ~/.ssh
-            ssh-keyscan github.com >> ~/.ssh/known_hosts
-            eval $(ssh-agent -s)
-            echo "$SSH_DEPLOY_KEY" | tr -d '\r' | ssh-add -
-          fi
           state_name=$(basename "$DIRECTORY")
+          # Container name needs to be a valid DNS name with less than 63 characters.
           container_name=$(dirname "$DIRECTORY" | tr -cd '[:alnum:]-' | cut -c1-62)
           storage_account_name=$(echo "${{ secrets.AZURE_SUBSCRIPTION_ID }}" | tr -d '-' | cut -c 1-12)state
           terraform init \
@@ -222,7 +236,17 @@ jobs:
             fi
           }
 
-          global_vars_file="-var-file=$(readlink -f globals.tfvars)"
+          find_global_var_file() {
+            local tfvars="globals.tfvars"
+            local json="globals.tfvars.json"
+            if [[ -f "$tfvars" ]]; then
+              echo "-var-file=$(readlink -f $tfvars)"
+            elif [[ -f "$json" ]]; then
+              echo "-var-file=$(readlink -f $json)"
+            fi
+          }
+
+          global_vars_file=$(find_global_var_file)
           app_var_file=$(find_app_var_files "$DIRECTORY")
           env_var_file=$(find_env_var_files)
           full_variable_flags="$global_vars_file $app_var_file $env_var_file"
@@ -238,30 +262,23 @@ jobs:
           ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+          TERRAFORM_ACTION: ${{ secrets.terraform_action }}
         run: |
-          terraform plan -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
+          if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
+            terraform plan -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
+          else
+            terraform plan -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
+          fi
+
           terraform show -json tfplan | jq > tfplan.json
-
-          # Manipulate stack directory name to be compatible with the uploade and download actions.
-          dir_artifact_name=$(echo "${{ matrix.directory }}" | sed 's/\//_/g')
-          echo "dir_artifact_name=$dir_artifact_name" >> $GITHUB_ENV
-
-      - name: Upload Terraform plan to workflow
-        uses: actions/upload-artifact@v4
-        with: 
-          name: "${{ env.dir_artifact_name }}_tfplan"
-          path: "${{ matrix.directory }}/tfplan*"
-          compression-level: 1
-          retention-days: 1
-          overwrite: true
-          if-no-files-found: error
 
       - name: Terraform Destructive Actions Check
         working-directory: "${{ matrix.directory }}"
         if: >-
-            ${{ inputs.destructive_action_check ||
+            ${{ ( inputs.destructive_action_check ||
               inputs.environment_name == 'pre' || 
-              inputs.environment_name == 'prd' }}
+              inputs.environment_name == 'prd' ) &&
+              inputs.terraform_action != 'destroy' }}
         run: |
           delete_count=$(terraform show -json tfplan | jq -r '([.resource_changes[]?.change?.actions?] | flatten) + ([.output_changes[]?.actions?] | flatten) | (map(select(.=="delete")) | length)')
 
@@ -270,7 +287,7 @@ jobs:
           fi
 
       - name: Terraform Apply
-        if: ${{ inputs.tf_action == 'apply' }} 
+        if: ${{ inputs.apply_terraform }} 
         working-directory: "${{ matrix.directory }}"
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"

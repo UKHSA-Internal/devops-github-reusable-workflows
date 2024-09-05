@@ -18,14 +18,6 @@ on:
         required: false
         type: boolean
         default: false
-      tf_action:
-        required: false
-        type: string
-        default: "plan"
-      destroy_before_apply:
-        required: false
-        type: boolean
-        default: false
       repo:
         required: false
         type: string
@@ -67,19 +59,7 @@ on:
 jobs:
   check:
     name: Lint and SAST Scan Terraform code
-    if: ${{ !contains('qat,pre,prd', inputs.environment_name) }}
     uses: ./.github/workflows/terraform-code-check.yml
-
-  destroy:
-    name: Destroy existing infrastructure
-    if: ${{ inputs.destroy_before_apply }}
-    uses: ./.github/workflows/terraform-destroy.yml
-    with:
-      environment_name: ${{ inputs.environment_name }}
-      aws_region: ${{ inputs.aws_region }}
-      repo: ${{ inputs.repo }}
-      ref:  ${{ inputs.ref }}
-    secrets: inherit
 
   define_matrix:
     name: Define directory matrix for build
@@ -97,17 +77,12 @@ jobs:
           UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@main
         id: directories
 
-  plan:
-    name: "Plan Infrastructure - ${{ matrix.directory }}"
-    if: >-
-      always() && (needs.destroy.result == 'skipped' || 
-      needs.destroy.result == 'success') && 
-      inputs.tf_action == 'plan'
+  apply:
+    name: "Apply Terraform"
     uses: ./.github/workflows/terraform-core.yml
     needs:
       - define_matrix
       - check
-      - destroy
     with:
       environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
@@ -115,53 +90,7 @@ jobs:
       ref:  ${{ inputs.ref }}
       directories: "${{ needs.define_matrix.outputs.directories }}"
       destructive_action_check: ${{ inputs.destructive_action_check }}
-      max_parallel: 5
-    secrets: inherit
-
-  deep_check:
-    name: "Deep checks for ${{ matrix.directory }}"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-    needs:
-      - define_matrix
-      - plan
-    strategy:
-      matrix:
-        directory: "${{ fromJSON(needs.define_matrix.outputs.directories) }}"
-      max-parallel: 5
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download Terraform plan to workflow
-        uses: actions/download-artifact@v4
-        with: 
-          name: "${{ env.dir_artifact_name }}_tfplan"
-          path: "${{ matrix.directory }}"
-      
-      - name: SAST Scanning with Checkov (Deep)
-        if: ${{ inputs.checkov_deep_scan }}
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main
-        with:
-          scan_type: deep
-          tfplan_file: "${{ matrix.directory }}/tfplan.json"
-          scan_directory: "${{ matrix.directory }}"
-
-  apply:
-    name: "Apply Infrastructure - ${{ matrix.directory }}"
-    if: ${{ inputs.tf_action == 'apply' }}
-    uses: ./.github/workflows/terraform-core.yml
-    needs:
-      - define_matrix
-    with:
-      environment_name: ${{ inputs.environment_name }}
-      aws_region: ${{ inputs.aws_region }}
-      repo: ${{ inputs.repo }}
-      ref:  ${{ inputs.ref }}
-      directories: "${{ needs.define_matrix.outputs.directories }}"
-      tf_action: 'apply'
-      destructive_action_check: ${{ inputs.destructive_action_check }}
+      terraform_action: "apply"
     secrets: inherit
 
   post-deployment-qa-checks:
