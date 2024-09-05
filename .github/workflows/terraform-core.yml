@@ -88,15 +88,15 @@ jobs:
 
       - name: Print environment
         run: |
-          echo ## ${{ matrix.directory }} ## >> $GITHUB_SUMMARY
-          echo environment_name: ${{ inputs.environment_name }} >> $GITHUB_SUMMARY
-          echo aws_region: ${{ inputs.aws_region }} >> $GITHUB_SUMMARY
-          echo destructive_action_check: ${{ inputs.destructive_action_check }} >> $GITHUB_SUMMARY
-          echo apply_terraform: ${{ inputs.apply_terraform }} >> $GITHUB_SUMMARY
-          echo terraform_action: ${{ inputs.terraform_action }} >> $GITHUB_SUMMARY
-          echo directories: ${{ inputs.directories }} >> $GITHUB_SUMMARY
-          echo repo: ${{ inputs.repo }} >> $GITHUB_SUMMARY
-          echo ref: ${{ inputs.ref }} >> $GITHUB_SUMMARY
+          echo "## ${{ matrix.directory }} ##" >> $GITHUB_SUMMARY
+          echo "environment_name: ${{ inputs.environment_name }}" >> $GITHUB_SUMMARY
+          echo "aws_region: ${{ inputs.aws_region }}" >> $GITHUB_SUMMARY
+          echo "destructive_action_check: ${{ inputs.destructive_action_check }}" >> $GITHUB_SUMMARY
+          echo "apply_terraform: ${{ inputs.apply_terraform }}" >> $GITHUB_SUMMARY
+          echo "terraform_action: ${{ inputs.terraform_action }}" >> $GITHUB_SUMMARY
+          echo "directories: ${{ inputs.directories }}" >> $GITHUB_SUMMARY
+          echo "repo: ${{ inputs.repo }}" >> $GITHUB_SUMMARY
+          echo "ref: ${{ inputs.ref }}" >> $GITHUB_SUMMARY
       
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
