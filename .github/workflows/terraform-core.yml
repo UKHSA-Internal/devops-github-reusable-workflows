@@ -88,15 +88,15 @@ jobs:
 
       - name: Print environment
         run: |
-          echo "## ${{ matrix.directory }} ##" >> $GITHUB_SUMMARY
-          echo "environment_name: ${{ inputs.environment_name }}" >> $GITHUB_SUMMARY
-          echo "aws_region: ${{ inputs.aws_region }}" >> $GITHUB_SUMMARY
-          echo "destructive_action_check: ${{ inputs.destructive_action_check }}" >> $GITHUB_SUMMARY
-          echo "apply_terraform: ${{ inputs.apply_terraform }}" >> $GITHUB_SUMMARY
-          echo "terraform_action: ${{ inputs.terraform_action }}" >> $GITHUB_SUMMARY
-          echo "directories: ${{ inputs.directories }}" >> $GITHUB_SUMMARY
-          echo "repo: ${{ inputs.repo }}" >> $GITHUB_SUMMARY
-          echo "ref: ${{ inputs.ref }}" >> $GITHUB_SUMMARY
+          echo "## ${{ matrix.directory }} ##" >> $GITHUB_STEP_SUMMARY
+          echo "environment_name: ${{ inputs.environment_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "aws_region: ${{ inputs.aws_region }}" >> $GITHUB_STEP_SUMMARY
+          echo "destructive_action_check: ${{ inputs.destructive_action_check }}" >> $GITHUB_STEP_SUMMARY
+          echo "apply_terraform: ${{ inputs.apply_terraform }}" >> $GITHUB_STEP_SUMMARY
+          echo "terraform_action: ${{ inputs.terraform_action }}" >> $GITHUB_STEP_SUMMARY
+          echo "directories: ${{ inputs.directories }}" >> $GITHUB_STEP_SUMMARY
+          echo "repo: ${{ inputs.repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "ref: ${{ inputs.ref }}" >> $GITHUB_STEP_SUMMARY
       
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -283,7 +283,7 @@ jobs:
           delete_count=$(terraform show -json tfplan | jq -r '([.resource_changes[]?.change?.actions?] | flatten) + ([.output_changes[]?.actions?] | flatten) | (map(select(.=="delete")) | length)')
 
           if [[ "$delete_count" -gt "0" ]]; then
-            echo ":heavy_exclamation_mark: WARNING - "$delete_count" resources will be destroyed in $(basename `pwd`)!" >> $GITHUB_SUMMARY
+            echo ":heavy_exclamation_mark: WARNING - "$delete_count" resources will be destroyed in $(basename `pwd`)!" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Terraform Apply
