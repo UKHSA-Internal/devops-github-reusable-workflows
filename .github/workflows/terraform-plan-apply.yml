@@ -18,6 +18,10 @@ on:
         required: false
         type: boolean
         default: false
+      apply_terraform:
+        required: false
+        default: true
+        type: boolean  
       repo:
         required: false
         type: string
@@ -91,6 +95,7 @@ jobs:
       directories: "${{ needs.define_matrix.outputs.directories }}"
       destructive_action_check: ${{ inputs.destructive_action_check }}
       terraform_action: "apply"
+      apply_terraform: ${{ inputs.apply_terraform }}
     secrets: inherit
 
   post-deployment-qa-checks:

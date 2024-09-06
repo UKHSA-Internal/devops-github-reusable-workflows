@@ -10,6 +10,10 @@ on:
         required: false
         default: eu-west-2
         type: string
+      apply_terraform:
+        required: false
+        default: true
+        type: boolean
       repo:
         required: false
         type: string

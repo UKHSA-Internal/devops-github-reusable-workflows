@@ -1,4 +1,4 @@
-name: "[Test] Deploy Terraform stacks"
+name: "[Test] Destroy Terraform stacks"
 # Regression testing to try and catch and breaking changes
 
 on:
@@ -6,25 +6,24 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/terraform-plan-apply.yml
-      - .github/workflows/_test-terraform-plan-apply.yml
       - .github/workflows/terraform-core.yml
+      - .github/workflows/terraform-destroy.yml
 
 jobs:
-  deploy_tf_stacks_regression_test:
+  destroy_tf_stacks_regression_test:
     name: Test using devops-terraform-example-project@main
-    uses: ./.github/workflows/terraform-plan-apply.yml
+    uses: ./.github/workflows/terraform-destroy.yml
     with:
       repo: UKHSA-Internal/devops-terraform-example-project
       ref: "main"
-      checkov_deep_scan: true
+      apply_terraform: false
     permissions:
       packages: read
       contents: read
       security-events: write
       statuses: write
       checks: write
-      id-token: write   
+      id-token: write
     secrets:
       REPO_SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
       AWS_ACCOUNT_ID: ${{ secrets.TEST_AWS_ACCOUNT_ID }}
