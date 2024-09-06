@@ -271,9 +271,9 @@ jobs:
           TERRAFORM_ACTION: ${{ secrets.terraform_action }}
         run: |
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
-            terraform plan -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
+            terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           else
-            terraform plan -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
+            terraform plan -lock-timeout=5m -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           fi
 
           terraform show -json tfplan | jq > tfplan.json
@@ -302,4 +302,4 @@ jobs:
           ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
-        run: terraform apply -no-color -input=false tfplan
+        run: terraform apply -lock-timeout=5m -no-color -input=false tfplan
