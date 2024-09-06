@@ -67,7 +67,7 @@ on:
         
 jobs:
   initialise:
-    name: "Initialise and run Terraform for - ${{ matrix.directory }}"
+    name: "Initialise and run Terraform for ${{ matrix.directory }}"
     runs-on: ubuntu-latest
     environment: "${{ inputs.environment_name }}"
     defaults:
@@ -89,6 +89,7 @@ jobs:
       - name: Print environment
         run: |
           echo "## ${{ matrix.directory }} ##" >> $GITHUB_STEP_SUMMARY
+          echo "### Inputs ###"
           echo "environment_name: ${{ inputs.environment_name }}" >> $GITHUB_STEP_SUMMARY
           echo "aws_region: ${{ inputs.aws_region }}" >> $GITHUB_STEP_SUMMARY
           echo "destructive_action_check: ${{ inputs.destructive_action_check }}" >> $GITHUB_STEP_SUMMARY
@@ -158,6 +159,9 @@ jobs:
         run: |
           backend_type=$(grep -oP 'backend\s+"?\K[^"\s]+' ./backend.tf)
           echo "backend_type=$backend_type" >> $GITHUB_OUTPUT
+          echo "### Terraform Info ###" >> $GITHUB_STEP_SUMMARY
+          echo "backend_type: $backend_type" >> $GITHUB_STEP_SUMMARY
+          echo "terraform_version: ${{ steps.terraform_version.outputs.tf_version }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Add SSH deploy key to ssh-agent
         env:
@@ -252,6 +256,8 @@ jobs:
           full_variable_flags="$global_vars_file $app_var_file $env_var_file"
 
           echo "tf_vars=$full_variable_flags" >> $GITHUB_OUTPUT
+          echo "### Terraform Variables ###"
+          echo "tf_vars: $full_variable_flags" >> $GITHUB_STEP_SUMMARY
 
       - name: Terraform Plan
         working-directory: "${{ matrix.directory }}"
