@@ -41,12 +41,16 @@ on:
     secrets:
       AWS_ROLE_NAME:
         required: false
+        description: "The name of the role to assume when Terraform interacts with the AWS API."
       AWS_ACCOUNT_ID:
         required: false
+        description: "The AWS account ID where Terraform will create resources. This account must contain the role specified in AWS_ROLE_NAME."
       AWS_ACCESS_KEY_ID:
         required: false
+        description: "AWS credentials used by Terraform to interact with AWS API. Not required if using OIDC."
       AWS_SECRET_ACCESS_KEY:
         required: false
+        description: "AWS credentials used by Terraform to interact with AWS API. Not required if using OIDC."
       AZURE_SUBSCRIPTION_ID:
         required: false
       AZURE_TENANT_ID:
@@ -268,7 +272,7 @@ jobs:
           ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
-          TERRAFORM_ACTION: ${{ secrets.terraform_action }}
+          TERRAFORM_ACTION: "${{ inputs.terraform_action }}"
         run: |
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
