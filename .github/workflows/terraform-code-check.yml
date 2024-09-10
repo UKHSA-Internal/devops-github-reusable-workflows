@@ -6,10 +6,23 @@ on:
         required: true
         description: "The root of the stack to run the Terraform code check in"
         type: string
+      repo:
+        required: false
+        type: string
+        default: ${{ github.repository }}
+        description: "Specify the org/repo of the repo containing Terraform code. Normally left blank to clone calling repo."
+      ref:
+        required: false
+        type: string
+        default: ${{ github.ref }}
+        description: "Specify the branch of the Terraform code. Normally left blank to use calling ref."
     secrets:
       TF_MODULES_SSH_DEPLOY_KEY:
         required: false
         description: "The SSH key used to clone Terraform modules downloaded as part of the Terraform init"
+      REPO_SSH_DEPLOY_KEY:
+        required: false
+        description: "The SSH key used to clone the repo containing the Terraform stacks"
 
 jobs:
   recursive-checks:
@@ -22,6 +35,10 @@ jobs:
       image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repo }}
+          ref: ${{ inputs.ref }}
+          ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
       - name: Create pending check
         uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@main

@@ -90,6 +90,8 @@ jobs:
         directory: ${{ fromJSON(needs.define_matrix.outputs.directories) }}
     with:
       stack_root_directory: "${{ matrix.directory }}"
+      repo: ${{ inputs.repo }}
+      ref: ${{ inputs.ref }}
 
   apply:
     name: "Run Terraform for directories"

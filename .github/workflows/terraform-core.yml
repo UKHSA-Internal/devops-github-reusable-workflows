@@ -102,7 +102,7 @@ jobs:
           echo "environment_name: ${{ inputs.environment_name }}" >> $GITHUB_STEP_SUMMARY
           echo "aws_region: ${{ inputs.aws_region }}" >> $GITHUB_STEP_SUMMARY
           echo "destructive_action_check: ${{ inputs.destructive_action_check }}" >> $GITHUB_STEP_SUMMARY
-          echo "apply_terraform: ${{ inputs.apply_terraform }}" >> $GITHUB_STEP_SUMMARY
+          echo "execute_terraform_plan: ${{ inputs.execute_terraform_plan }}" >> $GITHUB_STEP_SUMMARY
           echo "terraform_action: ${{ inputs.terraform_action }}" >> $GITHUB_STEP_SUMMARY
           echo "directories: ${{ inputs.directories }}" >> $GITHUB_STEP_SUMMARY
           echo "repo: ${{ inputs.repo }}" >> $GITHUB_STEP_SUMMARY
@@ -302,7 +302,7 @@ jobs:
           fi
 
       - name: Terraform Apply
-        if: ${{ inputs.apply_terraform }} 
+        if: ${{ inputs.execute_terraform_plan }} 
         working-directory: "${{ matrix.directory }}"
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
