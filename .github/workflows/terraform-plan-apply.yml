@@ -92,6 +92,8 @@ jobs:
       stack_root_directory: "${{ matrix.directory }}"
       repo: ${{ inputs.repo }}
       ref: ${{ inputs.ref }}
+    secrets:
+      REPO_SSH_DEPLOY_KEY: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
   apply:
     name: "Run Terraform for directories"
