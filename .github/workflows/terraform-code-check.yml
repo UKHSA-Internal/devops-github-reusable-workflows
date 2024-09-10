@@ -44,7 +44,7 @@ jobs:
           repository: ${{ inputs.repo }}
           ref: ${{ inputs.ref }}
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
-
+  
       - name: Create pending check
         uses: UKHSA-Internal/devops-github-actions/.github/actions/github-status-check@main
         id: create_check
@@ -60,6 +60,15 @@ jobs:
             | Terraform Linting  |  :hourglass_flowing_sand: Pending  |
             | Checkov Scan       |  :hourglass_flowing_sand: Pending  |
 
+      - name: Find Terraform version
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@main
+        id: terraform_version
+        with:
+          tf_file: "${{ inputs.stack_root_directory }}/terraform.tf"
+      
+      - name: Use correct Terraform version
+        run: tfenv use ${{ steps.terraform_version.outputs.tf_version }}
+    
       - name: Terraform Formatting
         id: tf_fmt
         continue-on-error: true
