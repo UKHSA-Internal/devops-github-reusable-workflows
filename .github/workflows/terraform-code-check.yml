@@ -31,8 +31,8 @@ jobs:
     container:
       image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
       volumes:
-        - /home/runner/work/_actions/UKHSA-Internal/devops-github-actions/main:/home/runner/work/_actions/UKHSA-Internal/devops-github-actions/main
-        - /__t/Python:/__t/Python
+        - /home/runner/work/_actions/UKHSA-Internal/devops-github-actions/:/home/runner/work/_actions/UKHSA-Internal/devops-github-actions/
+        # - /__t/Python:/__t/Python
     steps:
 
       # Temporary - to go in base image
