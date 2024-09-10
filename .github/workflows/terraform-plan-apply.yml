@@ -93,7 +93,7 @@ jobs:
       REPO_SSH_DEPLOY_KEY: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
   apply:
-    name: "Run Terraform for directories"
+    name: Run Terraform for directories
     uses: ./.github/workflows/terraform-core.yml
     needs:
       - define_matrix
