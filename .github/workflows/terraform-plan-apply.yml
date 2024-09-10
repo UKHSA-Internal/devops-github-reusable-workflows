@@ -20,8 +20,11 @@ on:
         default: false
       execute_terraform_plan:
         required: false
-        default: false
-        type: boolean  
+        type: string
+        default: "apply"
+      destroy_before_apply:
+        required: false
+        type: boolean
       repo:
         required: false
         type: string
