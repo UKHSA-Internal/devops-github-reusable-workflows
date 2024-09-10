@@ -27,17 +27,13 @@ on:
 jobs:
   recursive-checks:
     name: Lint and Scan Terraform code
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ inputs.stack_root_directory }}
+    runs-on: ubuntu-latest        
     container:
       image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
     steps:
 
       # Temporary - to go in base image
       - run: apt-get update && apt-get install openssh-client -y
-        working-directory: /
 
       - uses: actions/checkout@v4
         with:
@@ -60,28 +56,22 @@ jobs:
             | Terraform Linting  |  :hourglass_flowing_sand: Pending  |
             | Checkov Scan       |  :hourglass_flowing_sand: Pending  |
 
-      - run: |
-          apt-get install tree -y
-
       - name: Find Terraform version
         uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@main
         id: terraform_version
         continue-on-error: true
         with:
           tf_file: "${{ inputs.stack_root_directory }}/terraform.tf"
-      
-      - run: |
-          pwd
-          tree /home/
-          tree ${{ github.workspace }}
 
       - name: Use correct Terraform version
         run: tfenv use ${{ steps.terraform_version.outputs.tf_version }}
+        working-directory: ${{ inputs.stack_root_directory }}
     
       - name: Terraform Formatting
         id: tf_fmt
         continue-on-error: true
         run: terraform fmt --recursive --check
+        working-directory: ${{ inputs.stack_root_directory }}
 
       - name: Terraform Linting with tflint
         id: tf_lint
