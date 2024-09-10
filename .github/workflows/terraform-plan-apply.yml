@@ -18,9 +18,9 @@ on:
         required: false
         type: boolean
         default: false
-      apply_terraform:
+      execute_terraform_plan:
         required: false
-        default: true
+        default: false
         type: boolean  
       repo:
         required: false
@@ -61,10 +61,6 @@ on:
         description: "Deprecated: Use either TF_MODULES_SSH_DEPLOY_KEY or REPO_SSH_DEPLOY_KEY instead."
         
 jobs:
-  check:
-    name: Lint and SAST Scan Terraform code
-    uses: ./.github/workflows/terraform-code-check.yml
-
   define_matrix:
     name: Define directory matrix for build
     runs-on: ubuntu-latest
@@ -81,8 +77,19 @@ jobs:
           UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@main
         id: directories
 
+  check:
+    name: Lint and SAST Scan Terraform code
+    uses: ./.github/workflows/terraform-code-check.yml
+    needs:
+      - define_matrix
+    strategy:
+      matrix:
+        directory: "${{ needs.define_matrix.outputs.directories }}"
+    with:
+      stack_root_directory: "${{ matrix.directory }}"
+
   apply:
-    name: "Apply Terraform"
+    name: "Run Terraform for directories"
     uses: ./.github/workflows/terraform-core.yml
     needs:
       - define_matrix
@@ -95,7 +102,7 @@ jobs:
       directories: "${{ needs.define_matrix.outputs.directories }}"
       destructive_action_check: ${{ inputs.destructive_action_check }}
       terraform_action: "apply"
-      apply_terraform: ${{ inputs.apply_terraform }}
+      execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
     secrets: inherit
 
   post-deployment-qa-checks:

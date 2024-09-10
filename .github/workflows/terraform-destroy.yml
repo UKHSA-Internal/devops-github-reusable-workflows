@@ -10,9 +10,9 @@ on:
         required: false
         default: eu-west-2
         type: string
-      apply_terraform:
+      execute_terraform_plan:
         required: false
-        default: true
+        default: false
         type: boolean
       repo:
         required: false
@@ -72,7 +72,7 @@ jobs:
           reverse: true
 
   apply:
-    name: "Apply Terraform (Destroy)"
+    name: "Run Terraform (Destroy)"
     uses: ./.github/workflows/terraform-core.yml
     needs:
       - define_matrix
@@ -83,4 +83,5 @@ jobs:
       ref:  ${{ inputs.ref }}
       directories: "${{ needs.define_matrix.outputs.directories }}"
       terraform_action: "destroy"
+      execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
     secrets: inherit

@@ -2,20 +2,22 @@ name: "[Analysis] Check Terraform Code"
 on:
   workflow_call:
     inputs:
-      tflint_module_scan:
-        required: false
-        type: boolean
-        default: false
+      stack_root_directory:
+        required: true
+        description: "The root of the stack to run the Terraform code check in"
+        type: string
     secrets:
       TF_MODULES_SSH_DEPLOY_KEY:
         required: false
         description: "The SSH key used to clone Terraform modules downloaded as part of the Terraform init"
 
 jobs:
-  # TODO: This script needs some way of determining the correct Terraform version to use. We can't reliabily do that from the root directory.
   recursive-checks:
     name: Lint and Scan Terraform code
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.stack_root_directory }}
     container:
       image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
     steps:
@@ -45,10 +47,14 @@ jobs:
         id: tf_lint
         continue-on-error: true
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-tflint@main
+        with:
+          tf_directory: ${{ inputs.stack_root_directory }}
 
       - name: SAST Scan Terraform code
         id: tf_scan
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main
+        with:
+          scan_directory: ${{ inputs.stack_root_directory }}
 
       - name: Check step status
         shell: bash

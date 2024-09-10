@@ -14,19 +14,25 @@ on:
         required: false
         type: boolean
         default: false
-      apply_terraform:
+      execute_terraform_plan:
         required: false
         type: boolean
-        default: true
+        default: false
+        description: "Whether or not to apply the Terraform code. Set to false for a plan only."
       terraform_action:
         required: false
         type: string
         default: "apply"
-        description: "'apply' or 'destroy'. Has no effect if `apply_terraform` is false."
+        description: "Which Terraform action to run. 'apply' or 'destroy'"
       directories:
-        description: "The list of directories for the matrix"
+        description: "The list of Terraform stacks to run Terraform in"
         required: true
         type: string
+      max_parallel:
+        required: false
+        description: "The maximum number of jobs to run at the same time. This should normally be 1 to avoid race conditions."
+        type: number
+        default: 1
       repo:
         required: false
         type: string
@@ -80,8 +86,7 @@ jobs:
     strategy:
       matrix:
         directory: "${{ fromJSON(inputs.directories) }}"
-      # Intentionally kept to run to prevent race conditions.
-      max-parallel: 1
+      max-parallel: ${{ inputs.max_parallel }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -139,8 +144,8 @@ jobs:
 
           for FILE in "${files_to_copy[@]}"; do
             if [[ ! -f "$DIRECTORY"/"$FILE" ]]; then
-                echo "WARN - $(basename "$DIRECTORY") is missing a "$FILE" file! This behaviour is deprecated - please ensure each stack has its own "$FILE" file."
-                cp "$FILE" "$DIRECTORY"/
+                echo "NOTE - $(basename "$DIRECTORY") will attempt to use the "$FILE" file in the root directory"
+                cp "$FILE" "$DIRECTORY"/ || exit 1
             else
               echo "NOTE - $(basename "$DIRECTORY") has its own "$FILE" file. Not copying "$FILE" from root"
             fi
