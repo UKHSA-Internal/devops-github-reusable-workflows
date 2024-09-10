@@ -62,7 +62,7 @@ jobs:
 
       - run: |
           apt-get install tree -y
-          tree /home/runner/work/_actions/
+          pwd
 
       - name: Find Terraform version
         uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@main
@@ -72,7 +72,7 @@ jobs:
           tf_file: "${{ inputs.stack_root_directory }}/terraform.tf"
       
       - run: |
-          apt-get install tree -y
+          pwd
           tree /home/runner/work/_actions/
 
       - name: Use correct Terraform version
