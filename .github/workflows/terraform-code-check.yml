@@ -60,6 +60,8 @@ jobs:
             | Terraform Linting  |  :hourglass_flowing_sand: Pending  |
             | Checkov Scan       |  :hourglass_flowing_sand: Pending  |
 
+      - uses: actions/setup-python@v5
+
       - name: Find Terraform version
         uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@main
         id: terraform_version
