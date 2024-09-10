@@ -34,6 +34,10 @@ jobs:
     container:
       image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
     steps:
+
+      # Temporary - to go in base image
+      - run: sudo apt-get update && sudo apt-get install openssh-client
+
       - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repo }}
