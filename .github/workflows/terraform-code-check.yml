@@ -30,13 +30,14 @@ jobs:
     runs-on: ubuntu-latest        
     container:
       image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
+      # Incredibly 
       volumes:
-        - /home/runner/work/_actions/UKHSA-Internal/devops-github-actions:/home/runner/work/_actions/UKHSA-Internal/devops-github-actions
+        - /home/runner/work/_actions/UKHSA-Internal/devops-github-actions/main:/home/runner/work/_actions/UKHSA-Internal/devops-github-actions/main
     steps:
 
       # Temporary - to go in base image
       - run: apt-get update && apt-get install openssh-client -y
-
+      - uses: actions/setup-python@v5
       - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repo }}
