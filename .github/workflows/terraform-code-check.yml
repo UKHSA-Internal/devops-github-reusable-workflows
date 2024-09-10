@@ -36,7 +36,7 @@ jobs:
     steps:
 
       # Temporary - to go in base image
-      - run: apt-get update && apt-get install openssh-client
+      - run: apt-get update && apt-get install openssh-client -y
         working-directory: /
 
       - uses: actions/checkout@v4
