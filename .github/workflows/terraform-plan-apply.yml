@@ -36,12 +36,7 @@ on:
         required: false
         type: boolean
         default: true
-        description: "Whether or not the deployment requires approval to run."
-      run_plan_first:
-        required: false
-        type: boolean
-        default: false
-        description: "Whether or not to run a plan only. Only useful if requires_approval is true."
+        description: "Whether or not the deployment requires approval to run. A Terraform plan will be run before the approval gate."
 
     secrets:
       AWS_ROLE_NAME:
@@ -105,7 +100,7 @@ jobs:
   plan:
     name: Plan Terraform
     uses: ./.github/workflows/terraform-core.yml
-    if: ${{ inputs.run_plan_first }}
+    if: ${{ inputs.requires_approval }}
     needs:
       - define_matrix
       - check
@@ -131,7 +126,6 @@ jobs:
       - plan
     steps:
       - run: "echo Awaiting approval"
-  
     
   apply:
     name: Run Terraform
