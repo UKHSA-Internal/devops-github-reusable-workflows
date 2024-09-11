@@ -32,6 +32,16 @@ on:
         type: string
         default: ${{ github.ref }}
         description: "Specify the branch of the Terraform code. Normally left blank to use calling ref."
+      requires_approval:
+        required: false
+        type: boolean
+        default: true
+        description: "Whether or not the deployment requires approval to run."
+      run_plan_first:
+        required: false
+        type: boolean
+        default: false
+        description: "Whether or not to run a plan only. Only useful if requires_approval is true."
 
     secrets:
       AWS_ROLE_NAME:
@@ -92,8 +102,39 @@ jobs:
     secrets:
       REPO_SSH_DEPLOY_KEY: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
+  plan:
+    name: Plan Terraform
+    uses: ./.github/workflows/terraform-core.yml
+    if: ${{ inputs.run_plan_first }}
+    needs:
+      - define_matrix
+      - check
+    with:
+      environment_name: ${{ inputs.environment_name }}
+      aws_region: ${{ inputs.aws_region }}
+      repo: ${{ inputs.repo }}
+      ref:  ${{ inputs.ref }}
+      directories: "${{ needs.define_matrix.outputs.directories }}"
+      destructive_action_check: ${{ inputs.destructive_action_check }}
+      terraform_action: "plan"
+      execute_terraform_plan: false
+    secrets: inherit
+
+  approve:
+    name: Approve deployment
+    runs-on: ubuntu-latest
+    if: ${{ inputs.requires_approval }}
+    environment: ${{ inputs.environment_name }}
+    needs:
+      - define_matrix
+      - check
+      - plan
+    steps:
+      - run: "echo Awaiting approval"
+  
+    
   apply:
-    name: Run Terraform for directories
+    name: Run Terraform
     uses: ./.github/workflows/terraform-core.yml
     needs:
       - define_matrix
@@ -114,6 +155,5 @@ jobs:
     uses: ./.github/workflows/terraform-post-deployment-qa.yml
     needs: apply
     with:
-      environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
     secrets: inherit
