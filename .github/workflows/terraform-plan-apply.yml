@@ -133,6 +133,7 @@ jobs:
     needs:
       - define_matrix
       - check
+      - approve
     with:
       environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
