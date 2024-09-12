@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest        
     container:
       image: ghcr.io/ukhsa-internal/devops-terraform-ci:latest
-      # Voume is workaround for https://github.com/actions/runner/issues/716
+      # Volume is workaround for https://github.com/actions/runner/issues/716
       volumes:
         - /home/runner/work/_actions/UKHSA-Internal/devops-github-actions/:/home/runner/work/_actions/UKHSA-Internal/devops-github-actions/
     steps:

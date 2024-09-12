@@ -297,6 +297,13 @@ jobs:
           fi
 
           terraform show -json tfplan | jq > tfplan.json
+
+          echo "## Terraform Plan Output" >> $GITHUB_STEP_SUMMARY
+          echo "<details><summary>View Plan</summary>" >> $GITHUB_STEP_SUMMARY
+          echo "```terraform" >> $GITHUB_STEP_SUMMARY
+          echo $(terraform show tfplan) >> $GITHUB_STEP_SUMMARY
+          echo "```" >> $GITHUB_STEP_SUMMARY
+          echo "</details>" >> $GITHUB_STEP_SUMMARY
         
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
