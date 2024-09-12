@@ -304,7 +304,7 @@ jobs:
         with:
           name: "tfplan-${{ env.state_name }}"
           path: "${{ matrix.directory }}/tfplan"
-          if-no-files-found: errror
+          if-no-files-found: error
           retention-days: 1
 
       - uses: actions/download-artifact@v4
