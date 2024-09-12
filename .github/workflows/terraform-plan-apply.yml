@@ -32,11 +32,6 @@ on:
         type: string
         default: ${{ github.ref }}
         description: "Specify the branch of the Terraform code. Normally left blank to use calling ref."
-      requires_approval:
-        required: false
-        type: boolean
-        default: true
-        description: "Whether or not the deployment requires approval to run. A Terraform plan will be run before the approval gate."
 
     secrets:
       AWS_ROLE_NAME:
@@ -100,7 +95,6 @@ jobs:
   plan:
     name: Plan Terraform
     uses: ./.github/workflows/terraform-core.yml
-    if: ${{ inputs.requires_approval }}
     needs:
       - define_matrix
       - check
@@ -121,16 +115,23 @@ jobs:
     name: Approve deployment
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment_name }}
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     needs:
       - define_matrix
       - check
       - plan
     steps:
       - run: |
-          if [[ "${{ inputs.requires_approval }}" == "false" ]]; then
-            echo "requires_approval is false. Proceeding without approval."
+          protection_rules=$(gh api -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          /repos/UKHSA-Internal/pre-entry-tb-screening-iac/environments/dev \
+          | jq -r '.protection_rules | length')
+
+          if [[ $protection_rules == "0" ]]; then
+            echo "Environment ${{ inputs.environment_name }} doesn't require manual approval. Automatically proceeding..."
           fi
-    
+
   apply:
     name: Run Terraform
     uses: ./.github/workflows/terraform-core.yml
