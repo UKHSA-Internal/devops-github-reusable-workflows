@@ -21,6 +21,7 @@ jobs:
       execute_terraform_plan: true
     permissions:
       packages: read
+      actions: read
       contents: read
       security-events: write
       statuses: write
