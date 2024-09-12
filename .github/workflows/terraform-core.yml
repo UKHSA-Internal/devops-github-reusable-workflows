@@ -301,7 +301,7 @@ jobs:
           echo "## Terraform Plan Output" >> $GITHUB_STEP_SUMMARY
           echo "<details><summary>View Plan</summary>" >> $GITHUB_STEP_SUMMARY
           echo "```terraform" >> $GITHUB_STEP_SUMMARY
-          echo $(terraform show tfplan) >> $GITHUB_STEP_SUMMARY
+          terraform show tfplan >> $GITHUB_STEP_SUMMARY
           echo "```" >> $GITHUB_STEP_SUMMARY
           echo "</details>" >> $GITHUB_STEP_SUMMARY
         
