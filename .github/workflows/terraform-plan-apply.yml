@@ -122,10 +122,11 @@ jobs:
       - check
       - plan
     steps:
-      - run: |
+      - name: "Check approval requirement"
+        run: |
           protection_rules=$(gh api -H "Accept: application/vnd.github+json" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
-          /repos/UKHSA-Internal/pre-entry-tb-screening-iac/environments/dev \
+          /repos/${{ github.repository }}/environments/dev \
           | jq -r '.protection_rules | length')
 
           if [[ $protection_rules == "0" ]]; then
