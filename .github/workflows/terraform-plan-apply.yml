@@ -113,6 +113,8 @@ jobs:
       destructive_action_check: ${{ inputs.destructive_action_check }}
       terraform_action: "plan"
       execute_terraform_plan: false
+      upload_plan: true
+      download_existing_plan: false
     secrets: inherit
 
   approve:
@@ -125,26 +127,9 @@ jobs:
       - plan
     steps:
       - run: |
-          if [[ ${{ inputs.requires_approval }} == "false" ]]; then
+          if [[ "${{ inputs.requires_approval }}" == "false" ]]; then
             echo "requires_approval is false. Proceeding without approval."
           fi
-    
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT"
     
   apply:
     name: Run Terraform
@@ -162,6 +147,8 @@ jobs:
       destructive_action_check: ${{ inputs.destructive_action_check }}
       terraform_action: "apply"
       execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
+      upload_plan: false
+      download_existing_plan: true
     secrets: inherit
 
   # update-deployment:

@@ -43,7 +43,17 @@ on:
         type: string
         default: ${{ github.ref }}
         description: "Specify the branch of the Terraform code. Normally left blank to use calling ref."
-
+      upload_plan:
+        required: false
+        type: boolean
+        default: false
+        description: "Create an artifact containing the resulting Terraform plan. Incompatible with download_existing_plan"
+      download_existing_plan:
+        required: false
+        type: boolean
+        default: false
+        description: "Download an artifact containing an existing Terraform plan created by a previous run. Incompatible with upload_plan"
+  
     secrets:
       AWS_ROLE_NAME:
         required: false
@@ -277,6 +287,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
           TERRAFORM_ACTION: "${{ inputs.terraform_action }}"
+        if: inputs.download_existing_plan == false
         run: |
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
@@ -285,6 +296,21 @@ jobs:
           fi
 
           terraform show -json tfplan | jq > tfplan.json
+        
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v4
+        if: inputs.upload_plan
+        with:
+          name: "tfplan-${{ matrix.directory }}"
+          path: "${{ matrix.directory }}/tfplan"
+          if-no-files-found: errror
+          retention-days: 1
+
+      - uses: actions/download-artifact@v4
+        if: inputs.download_existing_plan
+        with:
+          name: "tfplan-${{ matrix.directory }}"
+          path: ${{ matrix.directory }}
 
       - name: Terraform Destructive Actions Check
         working-directory: "${{ matrix.directory }}"
