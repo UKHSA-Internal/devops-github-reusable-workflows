@@ -104,6 +104,10 @@ jobs:
           ref: ${{ inputs.ref }}
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
+      - name: Export variables
+        run:
+          echo "state_name=$(basename ${{ matrix.directory }})" >> $GITHUB_ENV
+
       - name: Print environment
         run: |
           echo "## ${{ matrix.directory }} ##" >> $GITHUB_STEP_SUMMARY
@@ -203,7 +207,6 @@ jobs:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
           DIRECTORY: "${{ matrix.directory }}"
         run: |
-          state_name=$(basename "$DIRECTORY")
           terraform init \
             -backend-config=dynamodb_table="${AWS_REGION}"-state-locks \
             -backend-config=bucket="${AWS_ACCOUNT_ID}"-"${AWS_REGION}"-state \
@@ -220,7 +223,6 @@ jobs:
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
         run: |
-          state_name=$(basename "$DIRECTORY")
           # Container name needs to be a valid DNS name with less than 63 characters.
           container_name=$(dirname "$DIRECTORY" | tr -cd '[:alnum:]-' | cut -c1-62)
           storage_account_name=$(echo "${{ secrets.AZURE_SUBSCRIPTION_ID }}" | tr -d '-' | cut -c 1-12)state
@@ -238,7 +240,6 @@ jobs:
         run: |
           find_app_var_files() {
             local dir=$1
-            local state_name=$(basename "$dir")
             local tfvars="./$dir/tfvars/${state_name}-${ENVIRONMENT_NAME}.tfvars"
             local json="./$dir/tfvars/${state_name}-${ENVIRONMENT_NAME}.tfvars.json"
             if [[ -f "$tfvars" ]]; then
@@ -301,7 +302,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: inputs.upload_plan
         with:
-          name: "tfplan-${{ matrix.directory }}"
+          name: "tfplan-${{ env.state_name }}"
           path: "${{ matrix.directory }}/tfplan"
           if-no-files-found: errror
           retention-days: 1
@@ -309,7 +310,7 @@ jobs:
       - uses: actions/download-artifact@v4
         if: inputs.download_existing_plan
         with:
-          name: "tfplan-${{ matrix.directory }}"
+          name: "tfplan-${{ env.state_name }}"
           path: ${{ matrix.directory }}
 
       - name: Terraform Destructive Actions Check
