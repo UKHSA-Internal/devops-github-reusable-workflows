@@ -219,13 +219,19 @@ jobs:
             -backend-config=key="${ENVIRONMENT_NAME}"/"$state_name"/terraform.tfstate \
             -backend-config=resource_group_name="${{ secrets.AZURE_RESOURCE_GROUP_NAME }}"
 
-      - name: Check if the state file is empty.
+      - name: Check if the state file is empty
         working-directory: "${{ matrix.directory }}"
         run: |
           if terraform state list | grep -q .; then
-            echo "state_exists=true" >> GITHUB_OUTPUT
+            echo "state_exists=true" >> GITHUB_ENV
           else
-            echo "state_exists=false" >> GITHUB_OUTPUT
+            echo "state_exists=false" >> GITHUB_ENV
+          fi
+
+          # If the state file is empty and we're at the point where we want to plan only, exit the workflow cleanly
+          # because the apply can't be done here.
+          if [[ ${{ env.state_exists }} == "false" ]] && [[ ${{ inputs.execute_terraform_plan }} == "false" ]]; then
+            exit 0
           fi
 
       - name: Find Terraform variables
@@ -283,12 +289,13 @@ jobs:
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
+        run: |          
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           else
             terraform plan -lock-timeout=5m -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           fi
+          
 
           terraform show -json tfplan | jq > tfplan.json
         
