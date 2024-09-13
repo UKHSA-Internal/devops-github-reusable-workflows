@@ -221,23 +221,24 @@ jobs:
 
       - name: Check if the state file is empty
         working-directory: "${{ matrix.directory }}"
+        id: state_empty
         env:
           execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
         run: |
-          if terraform state list | grep -q .; then
-            echo "state_exists=true" >> $GITHUB_ENV
-          else
-            # If the state file is empty and we want to plan only, exit the workflow cleanly as
-            # we can only plan and apply at this state to avoid failed `data` lookups in Terraform.
+          # If the state file is empty and we want to plan only, skip the rest of the workflow
+          # we can only plan and apply at this state to avoid failed `data` lookups in Terraform.
+          if ! terraform state list | grep -q .; then
             if [[ "$execute_terraform_plan" == "false" ]]; then
-              exit 0
+              echo "skip_workflow=true" >> $GITHUB_OUTPUT
+              exit
             fi
-
-            echo "state_exists=false" >> $GITHUB_ENV
           fi
-  
+          
+          echo "skip_workflow=false" >> $GITHUB_OUTPUT
+
       - name: Find Terraform variables
         id: variables
+        if: steps.state_empty.outputs.skip_workflow == 'false'
         env:
           DIRECTORY: "${{ matrix.directory }}"
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
@@ -282,7 +283,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: "${{ matrix.directory }}"
-        if: inputs.download_existing_plan == false
+        if: inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false'
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
           TERRAFORM_VARIABLES: "${{ steps.variables.outputs.tf_vars }}"
@@ -303,7 +304,7 @@ jobs:
         
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
-        if: inputs.upload_plan
+        if: inputs.upload_plan && steps.state_empty.outputs.skip_workflow == 'false'
         with:
           name: "tfplan-${{ env.state_name }}"
           path: "${{ matrix.directory }}/tfplan"
@@ -312,7 +313,7 @@ jobs:
           retention-days: 1
 
       - uses: actions/download-artifact@v4
-        if: inputs.download_existing_plan
+        if: inputs.download_existing_plan && steps.state_empty.outputs.skip_workflow == 'false'
         with:
           name: "tfplan-${{ env.state_name }}"
           path: ${{ matrix.directory }}
@@ -323,7 +324,8 @@ jobs:
             ${{ ( inputs.destructive_action_check ||
               inputs.environment_name == 'pre' || 
               inputs.environment_name == 'prd' ) &&
-              inputs.terraform_action != 'destroy' }}
+              inputs.terraform_action != 'destroy' &&
+              steps.state_empty.outputs.skip_workflow == 'false' }}
         run: |
           delete_count=$(terraform show -json tfplan | jq -r '([.resource_changes[]?.change?.actions?] | flatten) + ([.output_changes[]?.actions?] | flatten) | (map(select(.=="delete")) | length)')
 
@@ -332,7 +334,7 @@ jobs:
           fi
 
       - name: Terraform Apply
-        if: ${{ inputs.execute_terraform_plan }} 
+        if: ${{ inputs.execute_terraform_plan }} && steps.state_empty.outputs.skip_workflow == 'false'
         working-directory: "${{ matrix.directory }}"
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
