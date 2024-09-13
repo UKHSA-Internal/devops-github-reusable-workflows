@@ -219,6 +219,15 @@ jobs:
             -backend-config=key="${ENVIRONMENT_NAME}"/"$state_name"/terraform.tfstate \
             -backend-config=resource_group_name="${{ secrets.AZURE_RESOURCE_GROUP_NAME }}"
 
+      - name: Check if the state file is empty.
+        working-directory: "${{ matrix.directory }}"
+        run: |
+          if terraform state list | grep -q .; then
+            echo "state_exists=true" >> GITHUB_OUTPUT
+          else
+            echo "state_exists=false" >> GITHUB_OUTPUT
+          fi
+
       - name: Find Terraform variables
         id: variables
         env:
