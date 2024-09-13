@@ -93,7 +93,7 @@ jobs:
         uses: UKHSA-Internal/devops-github-actions/.github/actions/terraform-checkov-scan@main
         with:
           scan_directory: ${{ inputs.stack_root_directory }}
-          scan_type: ${{ inputs.checkov_download_external }}
+          scan_type: "${{ inputs.checkov_download_external && 'deep' || 'light' }}"
 
       - name: Check step status
         shell: bash
