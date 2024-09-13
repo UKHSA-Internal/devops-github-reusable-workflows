@@ -221,19 +221,21 @@ jobs:
 
       - name: Check if the state file is empty
         working-directory: "${{ matrix.directory }}"
+        env:
+          execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
         run: |
           if terraform state list | grep -q .; then
-            echo "state_exists=true" >> GITHUB_ENV
+            echo "state_exists=true" >> $GITHUB_ENV
           else
-            echo "state_exists=false" >> GITHUB_ENV
-          fi
+            # If the state file is empty and we want to plan only, exit the workflow cleanly as
+            # we can only plan and apply at this state to avoid failed `data` lookups in Terraform.
+            if [[ "$execute_terraform_plan" == "false" ]]; then
+              exit 0
+            fi
 
-          # If the state file is empty and we're at the point where we want to plan only, exit the workflow cleanly
-          # because the apply can't be done here.
-          if [[ ${{ env.state_exists }} == "false" ]] && [[ ${{ inputs.execute_terraform_plan }} == "false" ]]; then
-            exit 0
+            echo "state_exists=false" >> $GITHUB_ENV
           fi
-
+  
       - name: Find Terraform variables
         id: variables
         env:
