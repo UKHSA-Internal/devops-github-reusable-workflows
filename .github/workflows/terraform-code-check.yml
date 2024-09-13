@@ -38,10 +38,6 @@ jobs:
       volumes:
         - /home/runner/work/_actions/UKHSA-Internal/devops-github-actions/:/home/runner/work/_actions/UKHSA-Internal/devops-github-actions/
     steps:
-
-      # Temporary - to go in base image
-      - run: apt-get update && apt-get install openssh-client -y
-
       - uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repo }}
