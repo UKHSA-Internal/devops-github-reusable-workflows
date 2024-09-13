@@ -6,6 +6,10 @@ on:
         required: true
         description: "The root of the stack to run the Terraform code check in"
         type: string
+      tflint_module_scan:
+        required: false
+        type: boolean
+        description: "Whether to download the TF modules when running TFLint or not"
       repo:
         required: false
         type: string
@@ -64,6 +68,7 @@ jobs:
         id: terraform_version
         with:
           tf_file: "${{ inputs.stack_root_directory }}/terraform.tf"
+          scan_modules: ${{ inputs.tflint_module_scan }}
 
       - name: Use correct Terraform version
         run: tfenv use ${{ steps.terraform_version.outputs.tf_version }}
