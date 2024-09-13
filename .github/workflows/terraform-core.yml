@@ -292,6 +292,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TERRAFORM_ACTION: ${{ inputs.terraform_action }}
         run: |          
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
