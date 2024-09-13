@@ -290,12 +290,7 @@ jobs:
           ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
-<<<<<<< feature/doe-228-dry-workflows
-          TERRAFORM_ACTION: "${{ inputs.terraform_action }}"
-        if: inputs.download_existing_plan == false
-=======
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
->>>>>>> main
         run: |
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
@@ -352,9 +347,5 @@ jobs:
           ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID }}"
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
-<<<<<<< feature/doe-228-dry-workflows
+          GH_TOKEN: "${{ secrets.GH_TOKEN }}"
         run: terraform apply -lock-timeout=5m -no-color -input=false tfplan
-=======
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: terraform apply -no-color -input=false tfplan
->>>>>>> main
