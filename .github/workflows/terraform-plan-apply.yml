@@ -18,6 +18,10 @@ on:
         required: false
         type: boolean
         default: false
+      tflint_module_scan:
+        required: false
+        type: boolean
+        default: false
       execute_terraform_plan:
         required: false
         type: boolean
@@ -89,7 +93,7 @@ jobs:
       stack_root_directory: "${{ matrix.directory }}"
       repo: ${{ inputs.repo }}
       ref: ${{ inputs.ref }}
-      tflint_module_scan: ${{ inputs.checkov_deep_scan }}
+      checkov_download_external: ${{ inputs.checkov_deep_scan }}
     secrets:
       REPO_SSH_DEPLOY_KEY: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
