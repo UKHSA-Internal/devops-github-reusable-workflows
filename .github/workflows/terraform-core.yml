@@ -290,7 +290,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: "${{ matrix.directory }}"
-        if: steps.download_plan.conclusion == 'skipped' && inputs.execute_terraform_plan
+        if: steps.download_plan.conclusion == 'skipped'
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
           TERRAFORM_VARIABLES: "${{ steps.variables.outputs.tf_vars }}"
