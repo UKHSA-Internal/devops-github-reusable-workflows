@@ -18,7 +18,7 @@ jobs:
       repo: UKHSA-Internal/devops-terraform-example-project
       ref: "main"
       checkov_deep_scan: true
-      execute_terraform_plan: false
+      execute_terraform_plan: true
     permissions:
       packages: read
       actions: read
