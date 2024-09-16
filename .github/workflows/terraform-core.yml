@@ -230,7 +230,7 @@ jobs:
           else
             state_empty=true
             if [[ "$execute_terraform_plan" == "false" ]]; then
-              echo "skip_workflow=true"
+              skip_workflow=true
             fi
           fi
 
