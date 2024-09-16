@@ -281,9 +281,16 @@ jobs:
 
           echo "tf_vars=$full_variable_flags" >> $GITHUB_OUTPUT
 
+      - uses: actions/download-artifact@v4
+        id: download_plan
+        if: ( inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == true )
+        with:
+          name: "tfplan-${{ env.state_name }}"
+          path: ${{ matrix.directory }}
+
       - name: Terraform Plan
         working-directory: "${{ matrix.directory }}"
-        if: ( inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == true )
+        if: steps.download_plan.conclusion == 'skipped' && inputs.execute_terraform_plan
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
           TERRAFORM_VARIABLES: "${{ steps.variables.outputs.tf_vars }}"
@@ -299,8 +306,6 @@ jobs:
           else
             terraform plan -lock-timeout=5m -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           fi
-
-
           terraform show -json tfplan | jq > tfplan.json
 
       - name: Upload Terraform Plan
@@ -312,13 +317,7 @@ jobs:
           if-no-files-found: error
           compression-level: 1
           retention-days: 1
-
-      - uses: actions/download-artifact@v4
-        if: ( inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == true )
-        with:
-          name: "tfplan-${{ env.state_name }}"
-          path: ${{ matrix.directory }}
-
+  
       - name: Terraform Destructive Actions Check
         working-directory: "${{ matrix.directory }}"
         if: >-
