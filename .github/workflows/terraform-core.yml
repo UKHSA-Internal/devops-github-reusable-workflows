@@ -224,17 +224,18 @@ jobs:
         env:
           execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
         run: |
-          # If the state file is empty and we want to plan only, skip the rest of the workflow
-          # we can only plan and apply at this state to avoid failed `data` lookups in Terraform.
-          if ! terraform state list | grep -q .; then
-            echo "state_empty=true" >> $GITHUB_OUTPUT
+          skip_workflow=false
+          if terraform state list | grep -q .; then
+            state_empty=false
+          else
+            state_empty=true
             if [[ "$execute_terraform_plan" == "false" ]]; then
-              echo "skip_workflow=true" >> $GITHUB_OUTPUT
-              exit
+              echo "skip_workflow=true"
             fi
           fi
 
-          echo "skip_workflow=false" >> $GITHUB_OUTPUT
+          echo "state_empty=$state_empty" >> $GITHUB_OUTPUT
+          echo "skip_workflow=$skip_workflow" >> $GITHUB_OUTPUT
 
       - name: Find Terraform variables
         id: variables
