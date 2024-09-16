@@ -53,7 +53,7 @@ on:
         type: boolean
         default: false
         description: "Download an artifact containing an existing Terraform plan created by a previous run. Incompatible with upload_plan"
-  
+
     secrets:
       AWS_ROLE_NAME:
         required: false
@@ -87,7 +87,7 @@ on:
       SSH_DEPLOY_KEY:
         required: false
         description: "Deprecated: Use either TF_MODULES_SSH_DEPLOY_KEY or REPO_SSH_DEPLOY_KEY instead."
-        
+
 jobs:
   initialise:
     name: "Initialise and run Terraform for ${{ matrix.directory }}"
@@ -108,9 +108,8 @@ jobs:
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
       - name: Export variables
-        run:
-          echo "state_name=$(basename ${{ matrix.directory }})" >> $GITHUB_ENV
-      
+        run: echo "state_name=$(basename ${{ matrix.directory }})" >> $GITHUB_ENV
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         env:
@@ -228,12 +227,13 @@ jobs:
           # If the state file is empty and we want to plan only, skip the rest of the workflow
           # we can only plan and apply at this state to avoid failed `data` lookups in Terraform.
           if ! terraform state list | grep -q .; then
+            echo "state_empty=true" >> $GITHUB_OUTPUT
             if [[ "$execute_terraform_plan" == "false" ]]; then
               echo "skip_workflow=true" >> $GITHUB_OUTPUT
               exit
             fi
           fi
-          
+
           echo "skip_workflow=false" >> $GITHUB_OUTPUT
 
       - name: Find Terraform variables
@@ -283,7 +283,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: "${{ matrix.directory }}"
-        if: inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false'
+        if: ( inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == false )
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
           TERRAFORM_VARIABLES: "${{ steps.variables.outputs.tf_vars }}"
@@ -293,16 +293,16 @@ jobs:
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           TERRAFORM_ACTION: ${{ inputs.terraform_action }}
-        run: |          
+        run: |
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           else
             terraform plan -lock-timeout=5m -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           fi
-          
+
 
           terraform show -json tfplan | jq > tfplan.json
-        
+
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v4
         if: inputs.upload_plan && steps.state_empty.outputs.skip_workflow == 'false'
@@ -322,11 +322,11 @@ jobs:
       - name: Terraform Destructive Actions Check
         working-directory: "${{ matrix.directory }}"
         if: >-
-            ${{ ( inputs.destructive_action_check ||
-              inputs.environment_name == 'pre' || 
-              inputs.environment_name == 'prd' ) &&
-              inputs.terraform_action != 'destroy' &&
-              steps.state_empty.outputs.skip_workflow == 'false' }}
+          ${{ ( inputs.destructive_action_check ||
+            inputs.environment_name == 'pre' || 
+            inputs.environment_name == 'prd' ) &&
+            inputs.terraform_action != 'destroy' &&
+            steps.state_empty.outputs.skip_workflow == 'false' }}
         run: |
           delete_count=$(terraform show -json tfplan | jq -r '([.resource_changes[]?.change?.actions?] | flatten) + ([.output_changes[]?.actions?] | flatten) | (map(select(.=="delete")) | length)')
 
@@ -335,7 +335,7 @@ jobs:
           fi
 
       - name: Terraform Apply
-        if: ${{ inputs.execute_terraform_plan }} && steps.state_empty.outputs.skip_workflow == 'false'
+        if: inputs.execute_terraform_plan && steps.state_empty.outputs.skip_workflow == 'false'
         working-directory: "${{ matrix.directory }}"
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
