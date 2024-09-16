@@ -283,7 +283,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         id: download_plan
-        if: ( inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == true )
+        if: ( inputs.download_existing_plan == false ) || ( steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == true )
         with:
           name: "tfplan-${{ env.state_name }}"
           path: ${{ matrix.directory }}
