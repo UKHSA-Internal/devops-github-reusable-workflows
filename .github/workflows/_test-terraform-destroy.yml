@@ -16,7 +16,7 @@ jobs:
     with:
       repo: UKHSA-Internal/devops-terraform-example-project
       ref: "main"
-      execute_terraform_plan: true
+      execute_terraform_plan: false
     permissions:
       packages: read
       contents: read
