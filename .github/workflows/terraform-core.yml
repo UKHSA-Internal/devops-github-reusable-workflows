@@ -284,7 +284,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         id: download_plan
-        if: ( inputs.download_existing_plan == true && steps.state_empty.outputs.skip_workflow == 'false' )
+        if: ( inputs.download_existing_plan == true && steps.state_empty.outputs.state_empty == 'false' )
         with:
           name: "tfplan-${{ env.state_name }}"
           path: ${{ matrix.directory }}
