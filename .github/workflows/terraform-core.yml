@@ -283,7 +283,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: "${{ matrix.directory }}"
-        if: ( inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == false )
+        if: ( inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == true )
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
           TERRAFORM_VARIABLES: "${{ steps.variables.outputs.tf_vars }}"
@@ -314,7 +314,7 @@ jobs:
           retention-days: 1
 
       - uses: actions/download-artifact@v4
-        if: inputs.download_existing_plan && steps.state_empty.outputs.skip_workflow == 'false'
+        if: ( inputs.download_existing_plan == false && steps.state_empty.outputs.skip_workflow == 'false' ) || ( inputs.execute_terraform_plan && steps.state_empty.outputs.state_empty == true )
         with:
           name: "tfplan-${{ env.state_name }}"
           path: ${{ matrix.directory }}
