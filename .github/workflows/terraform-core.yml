@@ -291,7 +291,7 @@ jobs:
 
       - name: Terraform Plan
         working-directory: "${{ matrix.directory }}"
-        if: steps.download_plan.conclusion == 'skipped'
+        if: steps.download_plan.conclusion == 'skipped' && steps.state_empty.outputs.skip_workflow == 'false' 
         env:
           ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
           TERRAFORM_VARIABLES: "${{ steps.variables.outputs.tf_vars }}"
