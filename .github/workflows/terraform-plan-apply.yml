@@ -14,10 +14,6 @@ on:
         required: false
         type: boolean
         default: false
-      checkov_deep_scan:
-        required: false
-        type: boolean
-        default: false
       tflint_module_scan:
         required: false
         type: boolean
@@ -93,7 +89,6 @@ jobs:
       stack_root_directory: "${{ matrix.directory }}"
       repo: ${{ inputs.repo }}
       ref: ${{ inputs.ref }}
-      checkov_download_external: ${{ inputs.checkov_deep_scan }}
     secrets:
       REPO_SSH_DEPLOY_KEY: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
@@ -110,7 +105,7 @@ jobs:
       ref:  ${{ inputs.ref }}
       directories: "${{ needs.define_matrix.outputs.directories }}"
       destructive_action_check: ${{ inputs.destructive_action_check }}
-      terraform_action: "plan"
+      terraform_action: "apply"
       execute_terraform_plan: false
       upload_plan: true
       download_existing_plan: false
