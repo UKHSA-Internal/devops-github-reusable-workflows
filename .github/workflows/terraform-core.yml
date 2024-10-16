@@ -341,7 +341,7 @@ jobs:
         if: inputs.upload_plan && steps.state_empty.outputs.skip_workflow == 'false'
         with:
           name: "tfplan-${{ env.state_name }}"
-          path: "${{ matrix.directory }}/tfplan"
+          path: "${{ matrix.directory }}/tfplan*"
           if-no-files-found: error
           compression-level: 1
           retention-days: 1
