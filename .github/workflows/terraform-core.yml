@@ -165,7 +165,7 @@ jobs:
           done
 
       - name: Find Terraform version
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@main
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@fix/parse-terraform-version-regex
         id: terraform_version
         with:
           tf_file: "${{ matrix.directory }}/terraform.tf"
