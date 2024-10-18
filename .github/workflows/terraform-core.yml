@@ -97,6 +97,9 @@ on:
       SSH_DEPLOY_KEY:
         required: false
         description: "Deprecated: Use either TF_MODULES_SSH_DEPLOY_KEY or REPO_SSH_DEPLOY_KEY instead."
+      TF_VAR_APPLICATIONS:
+        required: false
+        description: "Temporary var to facilitate TAPIM go-live."
 
 jobs:
   initialise:
@@ -119,20 +122,7 @@ jobs:
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
       - name: Export variables
-        run: |
-          echo "state_name=$(basename ${{ matrix.directory }})" >> $GITHUB_ENV
-
-          # Find TF_VAR* secrets and set as an environment variables for use with Terraform
-          tf_var_secrets=false
-          for tf_var_secret in $(printenv | awk -F= '/^TF_VAR_/ {print $1}'); do
-            echo "Exporting $tf_var_secret"
-            export $tf_var_secret="${!tf_var_secret}"
-            tf_var_secrets=true
-          done
-
-          if [ "$tf_var_secrets" = false ]; then
-            echo "No secrets with prefix 'TF_VAR_' were found in the environment."
-          fi
+        run: echo "state_name=$(basename ${{ matrix.directory }})" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -178,7 +168,7 @@ jobs:
           done
 
       - name: Find Terraform version
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@fix/parse-terraform-version-regex
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@main
         id: terraform_version
         with:
           tf_file: "${{ matrix.directory }}/terraform.tf"
