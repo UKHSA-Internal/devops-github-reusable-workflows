@@ -69,9 +69,6 @@ on:
       SSH_DEPLOY_KEY:
         required: false
         description: "Deprecated: Use either TF_MODULES_SSH_DEPLOY_KEY or REPO_SSH_DEPLOY_KEY instead."
-      TF_VAR_APPLICATIONS:
-        required: false
-        description: "Temporary var to facilitate TAPIM go-live."
         
 jobs:
   define_matrix:

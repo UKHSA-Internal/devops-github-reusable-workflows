@@ -97,9 +97,6 @@ on:
       SSH_DEPLOY_KEY:
         required: false
         description: "Deprecated: Use either TF_MODULES_SSH_DEPLOY_KEY or REPO_SSH_DEPLOY_KEY instead."
-      TF_VAR_APPLICATIONS:
-        required: false
-        description: "Temporary var to facilitate TAPIM go-live."
 
 jobs:
   initialise:
@@ -331,7 +328,6 @@ jobs:
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           TERRAFORM_ACTION: ${{ inputs.terraform_action }}
-          TF_VAR_APPLICATIONS: "${{ secrets.TF_VAR_APPLICATIONS }}"
         run: |
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
@@ -376,5 +372,4 @@ jobs:
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
           GH_TOKEN: "${{ secrets.GH_TOKEN }}"
-          TF_VAR_APPLICATIONS: "${{ secrets.TF_VAR_APPLICATIONS }}"
         run: terraform apply -lock-timeout=5m -no-color -input=false tfplan
