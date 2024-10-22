@@ -119,7 +119,10 @@ jobs:
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
       - name: Export variables
-        run: echo "state_name=$(basename ${{ matrix.directory }})" >> $GITHUB_ENV
+        run: |
+          echo "state_name=$(basename ${{ matrix.directory }})" >> $GITHUB_ENV
+          dig az-tapim-uks-dev-kv.vault.azure.net
+          cat /etc/resolv.conf
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
