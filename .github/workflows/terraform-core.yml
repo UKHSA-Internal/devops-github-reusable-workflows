@@ -170,10 +170,17 @@ jobs:
         with:
           tf_file: "${{ matrix.directory }}/terraform.tf"
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "${{ steps.terraform_version.outputs.tf_version }}"
+      - name: Use correct Terraform version
+        run: |
+          echo "Terraform Version: ${{ steps.terraform_version.outputs.tf_version }}" 
+          tfenv use ${{ steps.terraform_version.outputs.tf_version }}
+          terraform --version
+        working-directory: ${{ matrix.directory }}
+
+      # - name: Set up Terraform
+      #   uses: hashicorp/setup-terraform@v3
+      #   with:
+      #     terraform_version: "${{ steps.terraform_version.outputs.tf_version }}"
 
       - name: Determine Backend Type
         working-directory: "${{ matrix.directory }}"
