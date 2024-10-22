@@ -235,6 +235,9 @@ jobs:
           container_name=$(dirname "$DIRECTORY" | tr -cd '[:alnum:]-' | cut -c1-62)
           echo "$container_name"
           storage_account_name=$(echo "${{ secrets.AZURE_SUBSCRIPTION_ID }}" | tr -d '-' | cut -c 1-12)state
+          echo "$storage_account_name"
+          echo "Terraform version"
+          terraform --version
           terraform init \
             -backend-config=storage_account_name="${storage_account_name}" \
             -backend-config=container_name="$container_name" \
