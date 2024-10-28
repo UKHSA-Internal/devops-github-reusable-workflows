@@ -63,6 +63,10 @@ jobs:
   deep-sast-scan:
     name: Run a deep SAST scan against Terraform code.
     runs-on: "ubuntu-latest"
+    environment: ${{ inputs.environment_name }}
+    defaults:
+      run:
+        shell: bash
     strategy:
       matrix:
         directory: "${{ fromJSON(inputs.directories) }}"

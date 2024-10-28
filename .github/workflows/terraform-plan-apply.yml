@@ -185,7 +185,9 @@ jobs:
   post-deployment-qa-checks:
     name: Run post deployment QA checks.
     uses: ./.github/workflows/terraform-post-deployment-qa.yml
-    needs: apply
+    needs: 
+      - apply
+      - define_matrix
     with:
       environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
