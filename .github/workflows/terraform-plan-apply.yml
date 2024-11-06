@@ -70,7 +70,7 @@ jobs:
     name: Define directory matrix for build
     runs-on: ubuntu-latest
     outputs:
-      directories: "${{ steps.directories.outputs.json_directory_list }}"
+      stack_config: "${{ steps.stack_config.outputs.json_directory_list }}"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,8 +79,8 @@ jobs:
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
       - name: Determine order to run Terraform stacks
         uses: >-
-          UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@main
-        id: directories
+          UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@DOE-331/self-hosted-runner-dependency
+        id: stack_config
 
   check:
     name: Lint and SAST Scan Terraform code
@@ -89,14 +89,30 @@ jobs:
       - define_matrix
     strategy:
       matrix:
-        directory: ${{ fromJSON(needs.define_matrix.outputs.directories) }}
+        stack: ${{ fromJSON(needs.define_matrix.outputs.stack_config) }}
     with:
-      stack_root_directory: "${{ matrix.directory }}"
+      stack_root_directory: "${{ matrix.stack.directory }}"
       repo: ${{ inputs.repo }}
       ref: ${{ inputs.ref }}
       tflint_module_scan: ${{ inputs.tflint_module_scan }}
     secrets:
       REPO_SSH_DEPLOY_KEY: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
+
+  filter_matrix_1:
+    name: Filter matrix for only planned changes
+    needs:
+      - define_matrix
+      - check
+    runs-on: ubuntu-latest
+    outputs:
+      filtered_matrix: ${{ steps.filter_matrix.outputs.filtered_matrix }}
+    steps:
+      - name: Filter Stacks
+        id: filter_matrix
+        run: |
+          echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
+          filtered_matrix=$(jq '[.[] | select(.planned_changes == true)]' initial_matrix.json)
+          echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
 
   plan:
     name: Plan Terraform
@@ -104,18 +120,18 @@ jobs:
     needs:
       - define_matrix
       - check
+      - filter_matrix_1
     with:
       environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
       repo: ${{ inputs.repo }}
       ref:  ${{ inputs.ref }}
-      directories: "${{ needs.define_matrix.outputs.directories }}"
+      stack_config: "${{ needs.filter_matrix_1.outputs.filtered_matrix }}"
       destructive_action_check: ${{ inputs.destructive_action_check }}
       terraform_action: "apply"
       execute_terraform_plan: false
       upload_plan: true
       download_existing_plan: false
-      runner_label: ${{ inputs.runner_label }}
     secrets: inherit
 
   approve:
@@ -129,6 +145,7 @@ jobs:
       - define_matrix
       - check
       - plan
+      - filter_matrix_1
     steps:
       - name: "Check approval requirement"
         run: |
@@ -141,25 +158,43 @@ jobs:
             echo "Environment ${{ inputs.environment_name }} doesn't require manual approval. Automatically proceeding..."
           fi
 
+  filter_matrix_2:
+    name: Filter matrix for only planned changes
+    needs:
+      - check
+      - approve
+    runs-on: ubuntu-latest
+    outputs:
+      filtered_matrix: ${{ steps.filter_matrix.outputs.filtered_matrix }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: "./artifacts"
+      - name: Filter Stacks
+        id: filter_matrix
+        run: |
+          jq -s '.' ./artifacts/**/updated_matrix.json > combined_matrix.json
+          filtered_matrix=$(jq '[.[] | select(.planned_changes == true)]' combined_matrix.json)
+          echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
+
   apply:
     name: Run Terraform
     uses: ./.github/workflows/terraform-core.yml
     needs:
-      - define_matrix
       - check
       - approve
+      - filter_matrix_2
     with:
       environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
       repo: ${{ inputs.repo }}
       ref:  ${{ inputs.ref }}
-      directories: "${{ needs.define_matrix.outputs.directories }}"
+      stack_config: "${{ needs.filter_matrix_2.outputs.filtered_matrix }}"
       destructive_action_check: ${{ inputs.destructive_action_check }}
       terraform_action: "apply"
       execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
       upload_plan: false
       download_existing_plan: true
-      runner_label: ${{ inputs.runner_label }}
     secrets: inherit
 
   # update-deployment:
@@ -187,10 +222,9 @@ jobs:
     uses: ./.github/workflows/terraform-post-deployment-qa.yml
     needs: 
       - apply
-      - define_matrix
+      - filter_matrix_2
     with:
       environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
-      directories: "${{ needs.define_matrix.outputs.directories }}"
-      runner_label: ${{ inputs.runner_label }}
+      stack_config: "${{ needs.filter_matrix_1.outputs.filtered_matrix }}"
     secrets: inherit
