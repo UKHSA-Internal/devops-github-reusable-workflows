@@ -111,7 +111,7 @@ jobs:
         id: filter_matrix
         run: |
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
-          filtered_matrix=$(jq '[.[] | select(.planned_changes == true)]' initial_matrix.json)
+          filtered_matrix=$(jq -c '[.[] | select(.planned_changes == true)]' initial_matrix.json)
           echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
 
   plan:
@@ -174,7 +174,7 @@ jobs:
         id: filter_matrix
         run: |
           jq -s '.' ./artifacts/**/updated_matrix.json > combined_matrix.json
-          filtered_matrix=$(jq '[.[] | select(.planned_changes == true)]' combined_matrix.json)
+          filtered_matrix=$(jq -c '[.[] | select(.planned_changes == true)]' combined_matrix.json)
           echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
 
   apply:
