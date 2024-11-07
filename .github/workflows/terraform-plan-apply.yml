@@ -91,10 +91,22 @@ jobs:
       filtered_matrix: ${{ steps.filter_matrix.outputs.filtered_matrix }}
     steps:
       - name: Filter Stacks
+        env:
+          ENVIRONMENT_NAME: ${{ inputs.environment_name }}
         id: filter_matrix
         run: |
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
-          filtered_matrix=$(jq -c '[.[] | select(.planned_changes == true)]' initial_matrix.json)
+          
+          filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" '
+            [ .[]
+              | select(.planned_changes == true)
+              | if .runner_label == "self-hosted"
+                then .runner_label = "self-hosted, " + $env_name
+                else .
+                end
+            ]
+          ' initial_matrix.json)
+
           echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
   
   check:
