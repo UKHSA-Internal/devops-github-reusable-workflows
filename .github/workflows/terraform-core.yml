@@ -362,8 +362,8 @@ jobs:
         with:
           name: "${{ env.state_name }}-artefacts"
           path: |
-            "${{ matrix.stack.directory }}/tfplan*"
-            "${{ matrix.stack.directory }}/updated_matrix.json"
+            ${{ matrix.stack.directory }}/tfplan*
+            ${{ matrix.stack.directory }}/updated_matrix.json
           if-no-files-found: error
           compression-level: 1
           retention-days: 1
