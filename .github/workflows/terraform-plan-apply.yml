@@ -82,27 +82,10 @@ jobs:
           UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@DOE-331/self-hosted-runner-dependency
         id: stack_config
 
-  check:
-    name: Lint and SAST Scan Terraform code
-    uses: ./.github/workflows/terraform-code-check.yml
-    needs:
-      - define_matrix
-    strategy:
-      matrix:
-        stack: ${{ fromJSON(needs.define_matrix.outputs.stack_config) }}
-    with:
-      stack_root_directory: "${{ matrix.stack.directory }}"
-      repo: ${{ inputs.repo }}
-      ref: ${{ inputs.ref }}
-      tflint_module_scan: ${{ inputs.tflint_module_scan }}
-    secrets:
-      REPO_SSH_DEPLOY_KEY: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
-
   filter_matrix_1:
     name: Filter matrix for only planned changes
     needs:
       - define_matrix
-      - check
     runs-on: ubuntu-latest
     outputs:
       filtered_matrix: ${{ steps.filter_matrix.outputs.filtered_matrix }}
@@ -113,12 +96,27 @@ jobs:
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
           filtered_matrix=$(jq -c '[.[] | select(.planned_changes == true)]' initial_matrix.json)
           echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
+  
+  check:
+    name: Lint and SAST Scan Terraform code
+    uses: ./.github/workflows/terraform-code-check.yml
+    needs:
+      - filter_matrix_1
+    strategy:
+      matrix:
+        stack: ${{ fromJSON(needs.filter_matrix_1.outputs.filtered_matrix) }}
+    with:
+      stack_root_directory: "${{ matrix.stack.directory }}"
+      repo: ${{ inputs.repo }}
+      ref: ${{ inputs.ref }}
+      tflint_module_scan: ${{ inputs.tflint_module_scan }}
+    secrets:
+      REPO_SSH_DEPLOY_KEY: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
 
   plan:
     name: Plan Terraform
     uses: ./.github/workflows/terraform-core.yml
     needs:
-      - define_matrix
       - check
       - filter_matrix_1
     with:
@@ -142,7 +140,6 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     needs:
-      - define_matrix
       - check
       - plan
       - filter_matrix_1
@@ -161,7 +158,6 @@ jobs:
   filter_matrix_2:
     name: Filter matrix for only planned changes
     needs:
-      - check
       - approve
     runs-on: ubuntu-latest
     outputs:
@@ -181,7 +177,6 @@ jobs:
     name: Run Terraform
     uses: ./.github/workflows/terraform-core.yml
     needs:
-      - check
       - approve
       - filter_matrix_2
     with:
