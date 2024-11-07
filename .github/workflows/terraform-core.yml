@@ -352,6 +352,9 @@ jobs:
             '{directory: $dir, runner_label: $runner_label, planned_changes: $planned_changes}' \
             > updated_matrix.json
 
+          cat updated_matrix.json
+          ls -al
+
       - name: Upload Terraform Plan and matrix
         uses: actions/upload-artifact@v4
         if: >-
