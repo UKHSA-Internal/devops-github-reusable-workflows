@@ -91,7 +91,8 @@ on:
 jobs:
   initialise:
     name: "Initialise and run Terraform for ${{ matrix.stack.directory }}"
-    runs-on: [ "${{ matrix.stack.runner_label }}" ]
+    # runs-on: [ "${{ matrix.stack.runner_label }}" ]
+    runs-on: [self-hosted]
     environment: ${{ inputs.environment_name }}
     defaults:
       run:
