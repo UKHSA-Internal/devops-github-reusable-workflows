@@ -101,7 +101,8 @@ jobs:
             [ .[]
               | select(.planned_changes == true)
               | if .runner_label == "self-hosted"
-                then .runner_label = "self-hosted,linux,x64," + $env_name
+                # then .runner_label = "self-hosted,linux,x64," + $env_name
+                then .runner_label = "self-hosted"
                 else .
                 end
             ]
