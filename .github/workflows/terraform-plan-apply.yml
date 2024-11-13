@@ -234,5 +234,5 @@ jobs:
     with:
       environment_name: ${{ inputs.environment_name }}
       aws_region: ${{ inputs.aws_region }}
-      stack_config: "${{ needs.filter_matrix_1.outputs.filtered_matrix }}"
+      stack_config: "${{ needs.filter_matrix_2.outputs.filtered_matrix }}"
     secrets: inherit

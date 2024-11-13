@@ -356,7 +356,9 @@ jobs:
       - name: Upload Terraform Plan and matrix
         uses: actions/upload-artifact@v4
         if: >-
-          ${{ inputs.upload_plan && steps.state_empty.outputs.skip_workflow == 'false' }}
+          ${{ inputs.upload_plan && 
+          steps.state_empty.outputs.skip_workflow == 'false' && 
+          steps.tf_plan.outputs.planned_changes == 'true' }}
         with:
           name: "${{ env.state_name }}-artefacts"
           path: |
