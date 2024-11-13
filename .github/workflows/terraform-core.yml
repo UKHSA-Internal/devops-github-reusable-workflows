@@ -161,7 +161,7 @@ jobs:
           tf_file: "${{ matrix.stack.directory }}/terraform.tf"
 
       - name: Setup Terraform for self-hosted runner
-        if: ${{ matrix.stack.runner_label == 'self-hosted' }}
+        if: ${{ contains(matrix.stack.runner_label, 'self-hosted') }}
         run: |
           echo "Terraform Version: ${{ steps.terraform_version.outputs.tf_version }}" 
           tfenv use ${{ steps.terraform_version.outputs.tf_version }}
@@ -169,7 +169,7 @@ jobs:
         working-directory: ${{ matrix.stack.directory }}
 
       - name: Setup Terraform for GHE runner
-        if: ${{ matrix.stack.runner_label != 'self-hosted' }}
+        if: ${{ !contains(matrix.stack.runner_label, 'self-hosted') }}
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "${{ steps.terraform_version.outputs.tf_version }}"
