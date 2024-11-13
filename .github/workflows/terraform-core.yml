@@ -159,7 +159,6 @@ jobs:
         id: terraform_version
         with:
           tf_file: "${{ matrix.stack.directory }}/terraform.tf"
-          runner_label: ${{ join(matrix.stack.runner_label, ',') }}
 
       - name: Setup Terraform for self-hosted runner
         if: ${{ contains(matrix.stack.runner_label, 'self-hosted') }}
@@ -355,10 +354,7 @@ jobs:
 
       - name: Upload Terraform Plan and matrix
         uses: actions/upload-artifact@v4
-        if: >-
-          ${{ inputs.upload_plan && 
-          steps.state_empty.outputs.skip_workflow == 'false' && 
-          steps.tf_plan.outputs.planned_changes == 'true' }}
+        if: ${{ inputs.upload_plan && steps.state_empty.outputs.skip_workflow == 'false' }}
         with:
           name: "${{ env.state_name }}-artefacts"
           path: |
