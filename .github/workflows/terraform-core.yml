@@ -155,7 +155,7 @@ jobs:
           done
 
       - name: Find Terraform version
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@main
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@DOE-331/self-hosted-runner-dependency
         id: terraform_version
         with:
           tf_file: "${{ matrix.stack.directory }}/terraform.tf"
