@@ -159,7 +159,7 @@ jobs:
         id: terraform_version
         with:
           tf_file: "${{ matrix.stack.directory }}/terraform.tf"
-          runner_label: ${{ matrix.stack.runner_label }}
+          tools_dir: ${{ matrix.stack.runner_label }}
 
       - name: Setup Terraform for self-hosted runner
         if: ${{ contains(matrix.stack.runner_label, 'self-hosted') }}
