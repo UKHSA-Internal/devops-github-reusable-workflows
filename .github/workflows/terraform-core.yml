@@ -329,9 +329,9 @@ jobs:
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           else
-            echo "Terraform variables: $TERRAFORM_VARIABLES"
             terraform plan -lock-timeout=5m -no-color -input=false -out=tfplan -detailed-exitcode -compact-warnings ${TERRAFORM_VARIABLES}
             terraform_exit_code=$?
+            echo "Terraform exit code: $terraform_exit_code"
             echo "terraform_exit_code=$terraform_exit_code" >> $GITHUB_OUTPUT
 
             # If no changes are required, we can skip subsequent steps for this stack.
@@ -349,9 +349,10 @@ jobs:
           echo "planned_changes=$planned_changes" >> $GITHUB_OUTPUT
           
       - name: Check Terraform plan exit code
+        if: steps.tf_plan.conclusion == 'success' || steps.tf_plan.conclusion == 'failure'
         run: |
           # Separate step required otherwise GitHub will exit on non-zero exit code.
-          if [ "$terraform_exit_code" -eq 1 ]; then
+          if [ $terraform_exit_code -eq 1 ]; then
             echo "Terraform encountered an error. Exiting workflow."
             exit 1
           fi
