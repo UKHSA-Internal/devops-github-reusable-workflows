@@ -350,6 +350,8 @@ jobs:
           
       - name: Check Terraform plan exit code
         if: steps.tf_plan.conclusion == 'success' || steps.tf_plan.conclusion == 'failure'
+        env:
+          terraform_exit_code: "${{ steps.tf_plan.outputs.terraform_exit_code }}"
         run: |
           # Separate step required otherwise GitHub will exit on non-zero exit code.
           if [ $terraform_exit_code -eq 1 ]; then
@@ -361,8 +363,10 @@ jobs:
         working-directory: "${{ matrix.stack.directory }}"
         run: |
           # If the tf_plan step was skipped because of no state, persist the stack configuration with planned_changes.
-          if [ -z "$planned_changes" ]; then
+          if [ "${{ steps.tf_plan.conclusion }}" == "skipped" ]; then
             planned_changes="${{ matrix.stack.planned_changes }}"
+          else
+            planned_changes="${{ steps.tf_plan.outputs.planned_changes }}"
           fi
 
           jq -n \
