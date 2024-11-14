@@ -175,6 +175,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       filtered_matrix: ${{ steps.filter_matrix.outputs.filtered_matrix }}
+      skip_remaining: ${{ steps.check_empty.outputs.skip_remaining }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -185,9 +186,18 @@ jobs:
           jq -s '.' ./artifacts/**/updated_matrix.json > combined_matrix.json
           filtered_matrix=$(jq -c '[.[] | select(.planned_changes == true)]' combined_matrix.json)
           echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
+      - name: Check if filtered matrix is empty
+        id: check_matrix
+        run: |
+          if [ "$filtered_matrix" = "[]" ]; then
+            echo "skip_remaining=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip_remaining=false" >> $GITHUB_OUTPUT
+          fi
 
   apply:
     name: Run Terraform
+    if: ${{ needs.filter_matrix_2.outputs.skip_remaining == 'false' }}
     uses: ./.github/workflows/terraform-core.yml
     needs:
       - approve
