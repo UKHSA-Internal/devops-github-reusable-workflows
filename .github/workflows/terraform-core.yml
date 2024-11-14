@@ -330,6 +330,7 @@ jobs:
           else
             terraform plan -lock-timeout=5m -no-color -input=false -out=tfplan -detailed-exitcode -compact-warnings ${TERRAFORM_VARIABLES}
             terraform_exit_code=$?
+            echo "Terraform exit code: $terraform_exit_code"
 
             # If no changes are required, we can skip subsequent steps for this stack.
             if [ $terraform_exit_code -eq 0 ]; then
@@ -345,6 +346,14 @@ jobs:
           
           echo "planned_changes=$planned_changes" >> $GITHUB_OUTPUT
           
+      - name: Update stack matrix
+        working-directory: "${{ matrix.stack.directory }}"
+        run: |
+          # If the tf_plan step was skipped because of no state, persist the stack configuration with planned_changes.
+          if [ -z "$planned_changes" ]; then
+            planned_changes="${{ matrix.stack.planned_changes }}"
+          fi
+
           jq -n \
             --arg dir "${{ matrix.stack.directory }}" \
             --arg runner_label "${{ matrix.stack.runner_label }}" \
@@ -354,13 +363,13 @@ jobs:
 
       - name: Upload Terraform Plan and matrix
         uses: actions/upload-artifact@v4
-        if: ${{ inputs.upload_plan && steps.state_empty.outputs.skip_workflow == 'false' }}
+        if: ${{ inputs.upload_plan }}
         with:
           name: "${{ env.state_name }}-artefacts"
           path: |
             ${{ matrix.stack.directory }}/tfplan*
             ${{ matrix.stack.directory }}/updated_matrix.json
-          if-no-files-found: error
+          if-no-files-found: warn
           compression-level: 1
           retention-days: 1
   
