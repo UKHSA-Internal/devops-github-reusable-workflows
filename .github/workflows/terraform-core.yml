@@ -326,6 +326,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           TERRAFORM_ACTION: ${{ inputs.terraform_action }}
         run: |
+          # Required, otherwise GitHub will exit immediately when the tf plan exit code is non-zero (2 = changes)
+          set +e 
+
           if [[ "$TERRAFORM_ACTION" == "destroy" ]]; then
             terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -compact-warnings ${TERRAFORM_VARIABLES}
           else
