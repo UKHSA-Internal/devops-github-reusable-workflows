@@ -341,17 +341,24 @@ jobs:
             echo "Terraform exit code: $terraform_exit_code"
             echo "terraform_exit_code=$terraform_exit_code" >> $GITHUB_OUTPUT
 
+            terraform show -json tfplan | jq > tfplan.json
+
             # If no changes are required, we can skip subsequent steps for this stack.
             if [ $terraform_exit_code -eq 0 ]; then
-                planned_changes=false
+              # If there are resources to be destroyed, the -detailed-exitcode returned is 0, despite changes being present.
+              # Additional logic required to inspect the tfplan.json file for if any destroy actions are present.
+              destroy_count=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' tfplan.json)
+              if [ "$destroy_count" -gt 0 ]; then
+                  planned_changes=true
+              else
+                  planned_changes=false
+              fi
             elif [ $terraform_exit_code -eq 2 ]; then
                 planned_changes=true
             else
                 exit $terraform_exit_code
             fi
           fi
-          
-          terraform show -json tfplan | jq > tfplan.json
           
           echo "planned_changes=$planned_changes" >> $GITHUB_OUTPUT
           
