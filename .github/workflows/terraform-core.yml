@@ -348,6 +348,7 @@ jobs:
               # If there are resources to be destroyed, the -detailed-exitcode returned is 0, despite changes being present.
               # Additional logic required to inspect the tfplan.json file for if any destroy actions are present.
               destroy_count=$(jq '[.resource_changes[] | select(.change.actions | index("delete"))] | length' tfplan.json)
+              echo "Destroy count: $destroy_count"
               if [ "$destroy_count" -gt 0 ]; then
                   planned_changes=true
               else
@@ -383,12 +384,16 @@ jobs:
             planned_changes="${{ steps.tf_plan.outputs.planned_changes }}"
           fi
 
+          echo "runner_label is: ${{ matrix.stack.runner_label }}"
+
           jq -n \
             --arg dir "${{ matrix.stack.directory }}" \
             --arg runner_label "${{ matrix.stack.runner_label }}" \
             --argjson planned_changes "$planned_changes" \
-            '{directory: $dir, runner_label: $runner_label, planned_changes: $planned_changes}' \
+            '{directory: $dir, runner_label: $runner_label | tostring, planned_changes: $planned_changes}' \
             > updated_matrix.json
+
+          cat updated_matrix.json
 
       - name: Upload Terraform Plan and matrix
         uses: actions/upload-artifact@v4
