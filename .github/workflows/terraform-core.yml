@@ -371,7 +371,6 @@ jobs:
           fi
 
       - name: Update stack matrix
-        if: steps.tf_plan.conclusion == 'success' || steps.tf_plan.conclusion == 'failure'
         working-directory: "${{ matrix.stack.directory }}"
         run: |
           # If the tf_plan step was skipped because of no state, persist the stack configuration with planned_changes.
