@@ -53,10 +53,6 @@ on:
         type: boolean
         default: false
         description: "Download an artifact containing an existing Terraform plan created by a previous run. Incompatible with upload_plan"
-      tf_env:
-        required: false
-        default: dev
-        type: string
     
     secrets:
       AWS_ROLE_NAME:
@@ -235,7 +231,7 @@ jobs:
           terraform init \
             -backend-config=storage_account_name="${storage_account_name}" \
             -backend-config=container_name="$container_name" \
-            -backend-config=key="${{ inputs.tf_env }}"/"$state_name"/terraform.tfstate \
+            -backend-config=key=$ENVIRONMENT_NAME/"$state_name"/terraform.tfstate \
             -backend-config=resource_group_name="${{ secrets.AZURE_RESOURCE_GROUP_NAME }}"
 
       - name: Check if the state file is empty
@@ -267,7 +263,7 @@ jobs:
         if: steps.state_empty.outputs.skip_workflow == 'false'
         env:
           DIRECTORY: "${{ matrix.stack.directory }}"
-          ENVIRONMENT_NAME: "${{ inputs.tf_env }}"
+          ENVIRONMENT_NAME: "${{ inputs.environment_name }}"
         run: |
           find_app_var_files() {
             local dir=$1
@@ -388,9 +384,9 @@ jobs:
 
           jq -n \
             --arg dir "${{ matrix.stack.directory }}" \
-            --arg runner_label "${{ matrix.stack.runner_label }}" \
+            --argjson runner_label "${{ matrix.stack.runner_label }}" \
             --argjson planned_changes "$planned_changes" \
-            '{directory: $dir, runner_label: $runner_label | tostring, planned_changes: $planned_changes}' \
+            '{directory: $dir, runner_label: $runner_label, planned_changes: $planned_changes}' \
             > updated_matrix.json
 
           cat updated_matrix.json

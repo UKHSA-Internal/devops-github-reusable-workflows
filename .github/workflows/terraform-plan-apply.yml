@@ -32,10 +32,6 @@ on:
         type: string
         default: ${{ github.ref }}
         description: "Specify the branch of the Terraform code. Normally left blank to use calling ref."
-      tf_env:
-        required: false
-        default: dev
-        type: string
   
     secrets:
       AWS_ROLE_NAME:
@@ -91,7 +87,7 @@ jobs:
     steps:
       - name: Filter Stacks
         env:
-          ENVIRONMENT_NAME: ${{ inputs.tf_env }}
+          ENVIRONMENT_NAME: ${{ inputs.environment_name }}
         id: filter_matrix
         run: |
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
@@ -141,7 +137,6 @@ jobs:
       execute_terraform_plan: false
       upload_plan: true
       download_existing_plan: false
-      tf_env: ${{ inputs.tf_env }}
     secrets: inherit
 
   approve:
@@ -213,7 +208,6 @@ jobs:
       execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
       upload_plan: false
       download_existing_plan: true
-      tf_env: ${{ inputs.tf_env }}
     secrets: inherit
 
   # update-deployment:
