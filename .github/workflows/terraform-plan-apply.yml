@@ -186,6 +186,7 @@ jobs:
       - name: Check if filtered matrix is empty
         id: check_matrix
         run: |
+          filtered_matrix='${{ steps.filter_matrix.outputs.filtered_matrix }}'
           if [ "$filtered_matrix" = "[]" ]; then
             echo "Matrix is empty"
             echo "skip_remaining=true" >> $GITHUB_OUTPUT
