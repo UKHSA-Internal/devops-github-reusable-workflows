@@ -66,7 +66,7 @@ jobs:
             | Checkov Scan       |  :hourglass_flowing_sand: Pending  |
 
       - name: Find Terraform version
-        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@fix/parse-tf-version-p2
+        uses: UKHSA-Internal/devops-github-actions/.github/actions/parse-terraform-version@v0.6.0
         id: terraform_version
         with:
           tf_file: "${{ inputs.stack_root_directory }}/terraform.tf"
