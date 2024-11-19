@@ -74,7 +74,7 @@ jobs:
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
       - name: Determine order to run Terraform stacks
         uses: >-
-          UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@DOE-331/self-hosted-runner-dependency
+          UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@v0.4.0
         id: stack_config
 
   filter_matrix_1:
@@ -170,7 +170,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       filtered_matrix: ${{ steps.filter_matrix.outputs.filtered_matrix }}
-      skip_remaining: ${{ steps.check_empty.outputs.skip_remaining }}
+      skip_remaining: ${{ steps.check_matrix.outputs.skip_remaining }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -179,14 +179,18 @@ jobs:
         id: filter_matrix
         run: |
           jq -s '.' ./artifacts/**/updated_matrix.json > combined_matrix.json
+          cat combined_matrix.json
           filtered_matrix=$(jq -c '[.[] | select(.planned_changes == true)]' combined_matrix.json)
+          echo "Filtered Matrix: $filtered_matrix"
           echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
       - name: Check if filtered matrix is empty
         id: check_matrix
         run: |
           if [ "$filtered_matrix" = "[]" ]; then
+            echo "Matrix is empty"
             echo "skip_remaining=true" >> $GITHUB_OUTPUT
           else
+            echo "Matrix is not empty"
             echo "skip_remaining=false" >> $GITHUB_OUTPUT
           fi
 
