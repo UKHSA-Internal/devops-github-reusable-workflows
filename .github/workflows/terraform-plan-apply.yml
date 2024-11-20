@@ -93,15 +93,18 @@ jobs:
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
           
           filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" '
-            [ .[]
-              | select(.planned_changes == true)
-              | if .runner_label == "self-hosted"
-                then .runner_label = ["self-hosted", $env_name]
-                else .
-                end
-            ]
+          [ to_entries[]
+            | .value
+            | .order = (.key + 1)
+            | select(.planned_changes == true)
+            | if .runner_label == "self-hosted"
+              then .runner_label = ["self-hosted", $env_name]
+              else .
+              end
+          ]
           ' initial_matrix.json)
 
+          echo "Filtered Matrix: $filtered_matrix"
           echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
   
   check:
@@ -180,7 +183,13 @@ jobs:
         run: |
           jq -s '.' ./artifacts/**/updated_matrix.json > combined_matrix.json
           cat combined_matrix.json
-          filtered_matrix=$(jq -c '[.[] | select(.planned_changes == true)]' combined_matrix.json)
+
+          filtered_matrix=$(jq -c '
+          [ .[]
+            | select(.planned_changes == true)
+          ] | sort_by(.order)
+          ' combined_matrix.json)
+
           echo "Filtered Matrix: $filtered_matrix"
           echo "filtered_matrix=$filtered_matrix" >> $GITHUB_OUTPUT
       - name: Check if filtered matrix is empty
