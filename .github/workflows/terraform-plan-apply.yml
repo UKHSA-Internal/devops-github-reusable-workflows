@@ -74,7 +74,7 @@ jobs:
           ssh-key: ${{ secrets.REPO_SSH_DEPLOY_KEY }}
       - name: Determine order to run Terraform stacks
         uses: >-
-          UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@v0.6.0
+          UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@fix/tf-dep-order
         id: stack_config
 
   filter_matrix_1:
@@ -93,9 +93,7 @@ jobs:
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
           
           filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" '
-          [ to_entries[]
-            | .value
-            | .order = (.key + 1)
+          [ .[]
             | select(.planned_changes == true)
             | if .runner_label == "self-hosted"
               then .runner_label = ["self-hosted", $env_name]
