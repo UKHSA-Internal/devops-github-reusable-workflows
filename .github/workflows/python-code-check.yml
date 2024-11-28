@@ -1,0 +1,50 @@
+name: "[Analysis] Check Python Code"
+on:
+  workflow_call:
+    inputs:
+      apps_dir:
+        required: true
+        type: string
+        description: "The directory of the apps"        
+      python_version:
+        required: true
+        type: string
+        description: "The version of the python"
+
+jobs:
+  recursive-checks:
+    name: Lint and Scan Python code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+        working-directory: ${{ inputs.apps_dir }}          
+
+      - name: Code linting
+        run: poetry run lint
+        continue-on-error: true
+        working-directory: ${{ inputs.apps_dir }}
+
+      - name: Code test
+        run: poetry run pytest 
+        continue-on-error: true
+        working-directory: ${{ inputs.apps_dir }}
+        
+      - name: Code coverage
+        run: poetry run coverage
+        continue-on-error: true
+        working-directory: ${{ inputs.apps_dir }}
+
+
+
+
