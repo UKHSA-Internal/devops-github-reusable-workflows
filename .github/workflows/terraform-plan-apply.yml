@@ -83,6 +83,8 @@ jobs:
         uses: >-
           UKHSA-Internal/devops-github-actions/.github/actions/terraform-dependency-sort@main
         id: directories
+      - name: Debug Matrix Output
+        run: echo "${{ steps.directories.outputs.json_directory_list }}"
 
   check:
     name: Lint and SAST Scan Terraform code
