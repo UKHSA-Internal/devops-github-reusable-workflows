@@ -69,6 +69,8 @@ jobs:
   define_matrix:
     name: Define directory matrix for build
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
     outputs:
       directories: "${{ steps.directories.outputs.json_directory_list }}"
     steps:
