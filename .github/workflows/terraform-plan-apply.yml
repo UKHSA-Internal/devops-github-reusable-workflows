@@ -143,6 +143,8 @@ jobs:
   approve:
     name: Approve deployment
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
     environment: ${{ inputs.environment_name }}
     if: ${{ inputs.execute_terraform_plan }}
     env:
