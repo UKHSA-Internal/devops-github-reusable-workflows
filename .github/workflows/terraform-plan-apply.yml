@@ -111,6 +111,8 @@ jobs:
             | select(.planned_changes == true)
             | if .runner_label == "self-hosted"
               then .runner_label = ["self-hosted", $env_name]
+              else if .runner_label = "locationservices-api-dev-R"
+              then runner_label = ["locationservices-api-dev-R", $env_name]
               else .
               end
           ]
