@@ -112,7 +112,7 @@ jobs:
             | if .runner_label == "self-hosted"
               then .runner_label = ["self-hosted", $env_name]
               elif .runner_label = "locationservices-api-dev-R"
-              then runner_label = ["locationservices-api-dev-R", $env_name]
+              then runner_label = "locationservices-api-dev-R"
               else .
               end
           ]
