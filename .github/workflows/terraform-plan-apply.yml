@@ -104,6 +104,7 @@ jobs:
           ENVIRONMENT_NAME: ${{ inputs.environment_name }}
         id: filter_matrix
         run: |
+          echo "STACK_CONFIG: $STACK_CONFIG"
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
           
           filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" '
@@ -112,7 +113,7 @@ jobs:
             | if .runner_label == "self-hosted"
               then .runner_label = ["self-hosted", $env_name]
               elif .runner_label == "locationservices-api-dev-R"
-              then .runner_label = ["locationservices-api-dev-R"]
+              then .runner_label = ["locationservices-api-dev-R", $env_name]
               else .
               end
           ]
