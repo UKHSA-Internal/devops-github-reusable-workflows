@@ -246,8 +246,7 @@ jobs:
         run: |
           # Container name needs to be a valid DNS name with less than 63 characters.
           container_name=$(dirname "$DIRECTORY" | tr -cd '[:alnum:]-' | cut -c1-62)
-          # storage_account_name=$(echo "${{ secrets.AZURE_SUBSCRIPTION_ID }}" | tr -d '-' | cut -c 1-12)state
-          storage_account_name=lsapistatedev
+          storage_account_name=$(echo "${{ secrets.AZURE_SUBSCRIPTION_ID }}" | tr -d '-' | cut -c 1-12)state
           terraform init \
             -backend-config=storage_account_name="${storage_account_name}" \
             -backend-config=container_name="$container_name" \
