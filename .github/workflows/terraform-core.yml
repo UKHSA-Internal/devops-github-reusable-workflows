@@ -188,7 +188,7 @@ jobs:
         working-directory: ${{ matrix.stack.directory }}
 
       - name: Setup Terraform for GHE runner
-        if: ${{ !contains(matrix.stack.runner_label, 'self-hosted') }}
+        #if: ${{ !contains(matrix.stack.runner_label, 'self-hosted') }}
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "${{ steps.terraform_version.outputs.tf_version }}"
