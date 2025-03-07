@@ -112,8 +112,8 @@ jobs:
             | select(.planned_changes == true)
             | if .runner_label == "self-hosted"
               then .runner_label = ["self-hosted", $env_name]
-              elif .runner_label == "locationservices-api-dev-R"
-              then .runner_label = ["locationservices-api-dev-R"]
+              elif .runner_label == "locationservices-api-${ENVIRONMENT_NAME}-R"
+              then .runner_label = ["locationservices-api-${ENVIRONMENT_NAME}-R"]
               else .
               end
           ]
@@ -152,7 +152,7 @@ jobs:
       stack_config: "${{ needs.filter_matrix_1.outputs.filtered_matrix }}"
       destructive_action_check: ${{ inputs.destructive_action_check }}
       terraform_action: "apply"
-      execute_terraform_plan: true
+      execute_terraform_plan: false
       upload_plan: true
       download_existing_plan: false
       python_version: ${{ inputs.python_version }}
