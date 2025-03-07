@@ -72,6 +72,10 @@ on:
       TF_PLAN_ENCRYPTION_PASSPHRASE:
         required: true
         description: "The passphrase used to encrypt Terraform Plans before uploading them as Github Artifacts"
+      TF_VAR_vm_username:
+        required: false
+      TF_VAR_vm_password:
+        required: false
   
         
 jobs:
