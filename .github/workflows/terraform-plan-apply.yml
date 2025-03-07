@@ -76,6 +76,8 @@ on:
         required: false
       TF_VAR_vm_password:
         required: false
+      RUNNER_LABEL:
+        required: false
   
         
 jobs:
@@ -106,7 +108,7 @@ jobs:
       - name: Filter Stacks
         env:
           ENVIRONMENT_NAME: ${{ inputs.environment_name }}
-          RUNNER_LABEL: ${{ vars.RUNNER_LABEL}}
+          RUNNER_LABEL: ${{ secrets.RUNNER_LABEL}}
         id: filter_matrix
         run: |
           echo "STACK_CONFIG: $STACK_CONFIG"
