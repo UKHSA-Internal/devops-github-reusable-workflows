@@ -113,7 +113,7 @@ jobs:
         run: |
           echo "STACK_CONFIG: $STACK_CONFIG"
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
-          echo '${{ vars.RUNNER_LABEL}}'
+          echo '${{ secrets.RUNNER_LABEL}}'
           filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" --arg runner_label "${RUNNER_LABEL}"'
           [ .[]
             | select(.planned_changes == true)
