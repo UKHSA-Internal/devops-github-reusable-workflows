@@ -111,13 +111,13 @@ jobs:
           echo "STACK_CONFIG: $STACK_CONFIG"
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
           
-          filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" '
+          filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" --arg runner_label "${RUNNER_LABEL}"'
           [ .[]
             | select(.planned_changes == true)
             | if .runner_label == "self-hosted"
               then .runner_label = ["self-hosted", $env_name]
-              elif .runner_label == "locationservices-api-${ENVIRONMENT_NAME}-R"
-              then .runner_label = ["locationservices-api-${ENVIRONMENT_NAME}-R"]
+              elif $runner_label != null
+              then .runner_label == $runner_label 
               else .
               end
           ]
