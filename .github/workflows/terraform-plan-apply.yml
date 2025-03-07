@@ -117,7 +117,7 @@ jobs:
           echo "STACK_CONFIG: $STACK_CONFIG"
           echo '${{ needs.define_matrix.outputs.stack_config }}' > initial_matrix.json
           echo '${{ inputs.vnet_runner_label}}'
-          filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" --arg vnet_runner_label "${VNET_RUNNER_LABEL}"'
+          filtered_matrix=$(jq -c --arg env_name "${ENVIRONMENT_NAME}" --arg vnet_runner_label "${VNET_RUNNER_LABEL}"
           [ .[]
             | select(.planned_changes == true)
             | if .runner_label == "self-hosted"
