@@ -100,10 +100,6 @@ on:
       TF_PLAN_ENCRYPTION_PASSPHRASE:
         required: true
         description: "The passphrase used to encrypt Terraform Plans before uploading them as Github Artifacts"
-      TF_VAR_vm_username:
-        required: false
-      TF_VAR_vm_password:
-        required: false
 
 jobs:
   initialise:
@@ -359,6 +355,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           TERRAFORM_ACTION: ${{ inputs.terraform_action }}
           SKIP_DESTROY: "${{ matrix.stack.skip_when_destroying }}"
+          TF_VAR_vm_username: ${{secrets.TF_VAR_VM_USERNAME}}
+          TF_VAR_vm_password: ${{secrets.TF_VAR_VM_PASSWORD}}
         run: |
           # Required, otherwise GitHub will exit immediately when the tf plan exit code is non-zero (2 = changes)
           set +e 
@@ -489,4 +487,6 @@ jobs:
           ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
           ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
           GH_TOKEN: "${{ secrets.GH_TOKEN }}"
+          TF_VAR_vm_username: ${{secrets.TF_VAR_VM_USERNAME}}
+          TF_VAR_vm_password: ${{secrets.TF_VAR_VM_PASSWORD}}
         run: terraform apply -lock-timeout=5m -no-color -input=false tfplan
