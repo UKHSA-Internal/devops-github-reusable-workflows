@@ -116,8 +116,8 @@ jobs:
             | select(.planned_changes == true)
             | if .runner_label == "self-hosted"
               then .runner_label = ["self-hosted", $env_name]
-              elif $runner_label != null
-              then .runner_label == $runner_label 
+              elif $runner_label != ""
+              then .runner_label = $runner_label 
               else .
               end
           ]
