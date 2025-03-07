@@ -106,6 +106,7 @@ jobs:
       - name: Filter Stacks
         env:
           ENVIRONMENT_NAME: ${{ inputs.environment_name }}
+          RUNNER_LABEL: ${{ vars.RUNNER_LABEL}}
         id: filter_matrix
         run: |
           echo "STACK_CONFIG: $STACK_CONFIG"
