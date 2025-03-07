@@ -156,7 +156,7 @@ jobs:
       stack_config: "${{ needs.filter_matrix_1.outputs.filtered_matrix }}"
       destructive_action_check: ${{ inputs.destructive_action_check }}
       terraform_action: "apply"
-      execute_terraform_plan: false
+      execute_terraform_plan: true
       upload_plan: true
       download_existing_plan: false
       python_version: ${{ inputs.python_version }}
