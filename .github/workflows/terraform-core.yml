@@ -484,6 +484,13 @@ jobs:
           compression-level: 1
           retention-days: 1
   
+      - name: DEBUG STEP
+        run: |
+          echo execute_terraform_plan: ${{ inputs.execute_terraform_plan }}
+          echo steps.state_empty.outputs.skip_workflow: ${{steps.state_empty.outputs.skip_workflow}}
+          echo inputs.terraform_action ${{ inputs.terraform_action }} 
+          echo matrix.stack.skip_when_destroying: ${{ matrix.stack.skip_when_destroying }}
+
       - name: Terraform Apply
         if: >-
           ${{ inputs.execute_terraform_plan &&
