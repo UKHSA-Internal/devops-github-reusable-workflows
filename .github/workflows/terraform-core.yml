@@ -366,7 +366,7 @@ jobs:
               terraform plan -lock-timeout=5m -destroy -no-color -input=false -out=tfplan -detailed-exitcode -compact-warnings ${TERRAFORM_VARIABLES}
             fi
           else
-            terraform plan -lock=false -no-color -input=false -out=tfplan -detailed-exitcode -compact-warnings ${TERRAFORM_VARIABLES}
+            terraform plan -lock-timeout=5m -no-color -input=false -out=tfplan -detailed-exitcode -compact-warnings ${TERRAFORM_VARIABLES}
           fi
           
           terraform_exit_code=$?
@@ -489,4 +489,4 @@ jobs:
           GH_TOKEN: "${{ secrets.GH_TOKEN }}"
           TF_VAR_vm_username: ${{secrets.TF_VAR_VM_USERNAME}}
           TF_VAR_vm_password: ${{secrets.TF_VAR_VM_PASSWORD}}
-        run: TF_LOG=DEBUG terraform apply -lock=false -no-color -input=false tfplan
+        run: TF_LOG=DEBUG terraform apply -lock-timeout=5m -no-color -input=false tfplan
