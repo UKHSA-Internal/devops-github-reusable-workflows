@@ -489,4 +489,4 @@ jobs:
           GH_TOKEN: "${{ secrets.GH_TOKEN }}"
           TF_VAR_vm_username: ${{secrets.TF_VAR_VM_USERNAME}}
           TF_VAR_vm_password: ${{secrets.TF_VAR_VM_PASSWORD}}
-        run: TF_LOG=INFO terraform apply -lock-timeout=5m -no-color -input=false tfplan
+        run: terraform apply -lock-timeout=5m -no-color -input=false tfplan
